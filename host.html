@@ -432,19 +432,22 @@
                     document.getElementById('pack-title').textContent = this.pack.title || this.pack.name || 'Quiz Pack';
                 }
 
-                // Set join URL - use production URL if on Vercel, otherwise show instructions
+                // Set join URL - detect environment and show appropriate URL
                 let joinUrl;
                 const hostname = window.location.hostname;
-                if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
-                    // Local development - show the network IP
-                    joinUrl = window.location.origin.replace('localhost', window.location.hostname) + '/player.html';
-                    // Add a note about LAN access
-                    const joinUrlEl = document.getElementById('join-url');
-                    if (joinUrlEl && hostname === 'localhost') {
-                        joinUrl = '(Use your computer\'s IP address)/player.html';
-                    }
+                const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+                const isLanIp = hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.match(/^172\.(1[6-9]|2[0-9]|3[01])\./);
+
+                if (isLocalhost) {
+                    // On localhost - phones can't reach this, show warning
+                    joinUrl = `http://[YOUR-IP]:${window.location.port || 80}/player.html`;
+                    // Try to detect if we're in production (Vercel sets certain headers)
+                    console.warn('Running on localhost - phones need your LAN IP to connect.');
+                } else if (isLanIp) {
+                    // On LAN IP - this is what phones can use
+                    joinUrl = window.location.origin + '/player.html';
                 } else {
-                    // Production - use origin
+                    // Production - use origin (works for Vercel, etc.)
                     joinUrl = window.location.origin + '/player.html';
                 }
                 document.getElementById('join-url').textContent = joinUrl;

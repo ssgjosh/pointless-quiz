@@ -2,13 +2,15 @@
   "name": "pointless-game",
   "version": "1.1.0",
   "description": "A TV-friendly quiz game where players aim for the lowest score - just like the show!",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "build-pack": "node pack-builder/index.js",
-    "serve": "npx http-server . -p 8080 -o",
-    "start": "npx http-server . -p 8080 -o",
+    "serve": "npx http-server . -p 8080",
+    "start": "node server.js",
     "server": "node server.js",
+    "dev:http": "npx http-server . -p 8080",
+    "dev:ws": "node server.js",
     "party:dev": "npx partykit dev",
     "party:deploy": "npx partykit deploy"
   },
