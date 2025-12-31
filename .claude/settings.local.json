@@ -22,7 +22,11 @@
       "Bash(npx localtunnel --port 3000)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(railway whoami:*)",
+      "Bash(railway login:*)",
+      "Bash(git push)"
     ]
   }
 }
