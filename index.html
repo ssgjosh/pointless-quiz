@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointless - Family Quiz Night</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen active">
+        <div class="setup-container">
+            <h1 class="game-title">POINTLESS</h1>
+            <p class="game-subtitle">Family Quiz Night</p>
+
+            <div class="setup-section">
+                <h2>Select a Game</h2>
+                <div id="pack-selector" class="pack-grid">
+                    <!-- Packs loaded dynamically -->
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h2>Players</h2>
+                <div id="player-inputs" class="player-inputs">
+                    <!-- Player inputs generated dynamically -->
+                </div>
+                <div class="player-controls">
+                    <button id="add-player-btn" class="btn btn-secondary">+ Add Player</button>
+                    <button id="remove-player-btn" class="btn btn-secondary">- Remove Player</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h2>Play Style</h2>
+                <div class="play-style-selector">
+                    <label class="mode-option">
+                        <input type="radio" name="play-style" value="local" checked>
+                        <div class="mode-card">
+                            <div class="mode-title">Single Device</div>
+                            <div class="mode-desc">Classic mode - host types all answers on this screen</div>
+                        </div>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="play-style" value="multiplayer">
+                        <div class="mode-card">
+                            <div class="mode-title">Multiplayer</div>
+                            <div class="mode-desc">Players join on their phones and type their own answers</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h2>Game Mode</h2>
+                <div class="game-mode-selector">
+                    <label class="mode-option">
+                        <input type="radio" name="game-mode" value="party" checked>
+                        <div class="mode-card">
+                            <div class="mode-title">Party Mode</div>
+                            <div class="mode-desc">Everyone plays every round. Lowest total score wins!</div>
+                        </div>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="game-mode" value="tv-show">
+                        <div class="mode-card">
+                            <div class="mode-title">TV Show Mode</div>
+                            <div class="mode-desc">Elimination rounds like the real show. Highest score each round is out!</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h2>Game Settings</h2>
+                <div class="settings-row">
+                    <label for="num-rounds">Number of Rounds:</label>
+                    <input type="number" id="num-rounds" min="3" max="20" value="5">
+                </div>
+                <div class="settings-row">
+                    <label for="timer-enabled">Show Timer (optional):</label>
+                    <input type="checkbox" id="timer-enabled">
+                </div>
+                <div class="settings-row">
+                    <label for="reduce-motion">Reduce Motion:</label>
+                    <input type="checkbox" id="reduce-motion">
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="btn btn-primary btn-large">START GAME</button>
+        </div>
+    </div>
+
+    <!-- Game Screen - Authentic Pointless Layout -->
+    <div id="game-screen" class="screen">
+        <!-- Category Introduction Overlay -->
+        <div id="category-intro" class="category-intro hidden">
+            <div class="category-intro-content">
+                <div class="round-number">ROUND <span id="intro-round-num">1</span></div>
+                <div class="category-prompt-intro" id="intro-category-prompt"></div>
+            </div>
+        </div>
+
+        <!-- Pointless Celebration Overlay -->
+        <div id="pointless-celebration" class="pointless-celebration hidden">
+            <div class="celebration-text">POINTLESS!</div>
+            <div class="celebration-subtitle">+£250 TO THE JACKPOT</div>
+            <div class="confetti-container" id="confetti-container"></div>
+        </div>
+
+        <!-- Round Results / Elimination Overlay (TV Show Mode) -->
+        <div id="round-results" class="round-results-overlay hidden">
+            <div class="round-results-content">
+                <div class="results-header">END OF ROUND <span id="results-round-num">1</span></div>
+                <div id="round-standings" class="round-standings">
+                    <!-- Populated dynamically -->
+                </div>
+                <div id="elimination-announcement" class="elimination-announcement hidden">
+                    <span class="eliminated-label">ELIMINATED</span>
+                    <span id="eliminated-player" class="eliminated-name"></span>
+                </div>
+                <button id="continue-btn" class="btn btn-primary btn-large">CONTINUE</button>
+            </div>
+        </div>
+
+        <!-- Main Stage Layout like the TV show -->
+        <div class="game-stage">
+            <!-- Top: Category/Question Display -->
+            <div class="stage-header">
+                <div class="header-top-row">
+                    <div class="round-badge">Round <span id="current-round">1</span>/<span id="total-rounds">10</span></div>
+                    <div class="jackpot-display">
+                        <span class="jackpot-label">JACKPOT</span>
+                        <span class="jackpot-amount" id="jackpot-amount">£1,000</span>
+                    </div>
+                </div>
+                <div class="category-display">
+                    <div class="category-prompt" id="category-prompt">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Middle: Main content area -->
+            <div class="stage-main">
+                <!-- Left side: Answer area and board -->
+                <div class="stage-center">
+                    <!-- Current player indicator -->
+                    <div class="current-player-banner">
+                        <span id="current-player-name">Player 1</span>'s turn
+                    </div>
+
+                    <!-- Question Type Display Areas -->
+                    <div id="question-type-display" class="question-type-display">
+                        <!-- Standard: just prompt (default) -->
+
+                        <!-- Anagram display -->
+                        <div id="anagram-display" class="type-display hidden">
+                            <div class="scrambled-letters" id="scrambled-text">ELPMAXE</div>
+                            <div class="letter-hint">(<span id="letter-count">7</span> letters)</div>
+                        </div>
+
+                        <!-- Picture display -->
+                        <div id="picture-display" class="type-display hidden">
+                            <div class="picture-frame">
+                                <img id="question-image" src="" alt="Identify this">
+                            </div>
+                        </div>
+
+                        <!-- Missing word display -->
+                        <div id="missing-word-display" class="type-display hidden">
+                            <div class="phrase-with-blank" id="phrase-text">The ___ King</div>
+                        </div>
+                    </div>
+
+                    <!-- Host Input Area -->
+                    <div class="host-input-area">
+                        <div class="input-wrapper">
+                            <input type="text" id="answer-input" placeholder="Enter answer..." autocomplete="off">
+                            <div id="autocomplete-dropdown" class="autocomplete-dropdown hidden"></div>
+                        </div>
+                        <div class="input-buttons">
+                            <button id="submit-answer-btn" class="btn btn-primary">SUBMIT</button>
+                            <button id="pass-btn" class="btn btn-secondary">PASS (+100)</button>
+                        </div>
+                    </div>
+
+                    <!-- Timer (hidden by default) -->
+                    <div id="timer-container" class="timer-container">
+                        <div id="timer-bar" class="timer-bar"></div>
+                        <span id="timer-text" class="timer-text">30</span>
+                    </div>
+
+                    <!-- Revealed Answer Display -->
+                    <div id="score-reveal-area" class="score-reveal-area hidden">
+                        <div class="revealed-answer" id="revealed-answer"></div>
+                        <div id="answer-image" class="answer-image hidden">
+                            <img id="answer-img" src="" alt="">
+                            <button id="image-info-btn" class="image-info-btn" title="Image credits">i</button>
+                        </div>
+                    </div>
+
+                    <!-- Answer Board showing this round's answers -->
+                    <div class="answer-board" id="answer-board">
+                        <div class="answer-board-title">This Round</div>
+                        <div id="answer-board-entries"></div>
+                    </div>
+                </div>
+
+                <!-- Right side: THE ICONIC SCORE TOWER -->
+                <div class="score-tower">
+                    <div class="score-value-badge" id="score-value">100</div>
+                    <div class="score-bar-tower">
+                        <div class="score-bar" id="score-bar"></div>
+                        <!-- Segment lines -->
+                        <div class="segment-lines">
+                            <span class="segment-mark" style="bottom: 0%">0</span>
+                            <span class="segment-mark" style="bottom: 25%">25</span>
+                            <span class="segment-mark" style="bottom: 50%">50</span>
+                            <span class="segment-mark" style="bottom: 75%">75</span>
+                            <span class="segment-mark" style="bottom: 100%">100</span>
+                        </div>
+                    </div>
+                    <div class="score-tower-label">POINTLESS</div>
+                </div>
+            </div>
+
+            <!-- Bottom: CONTESTANT PODIUMS -->
+            <div class="contestant-podiums" id="contestant-podiums">
+                <!-- Podiums generated dynamically by JS -->
+            </div>
+
+            <!-- Host Controls (small bar at very bottom) -->
+            <div class="host-controls">
+                <button id="next-player-btn" class="btn btn-control">Next Player →</button>
+                <button id="next-round-btn" class="btn btn-control">Next Round</button>
+                <button id="undo-btn" class="btn btn-control">Undo</button>
+                <div class="audio-controls">
+                    <button id="mute-btn" class="btn btn-icon" title="Mute">🔊</button>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70">
+                    <button id="fullscreen-btn" class="btn btn-icon" title="Fullscreen">⛶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="screen">
+        <div class="results-container">
+            <h1 class="results-title">GAME OVER</h1>
+            <div id="winner-announcement" class="winner-announcement"></div>
+            <div id="final-standings" class="final-standings"></div>
+            <div class="results-buttons">
+                <button id="play-again-btn" class="btn btn-primary btn-large">Play Again</button>
+                <button id="credits-btn" class="btn btn-secondary">Credits & Attribution</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credits Modal -->
+    <div id="credits-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" id="close-credits">&times;</button>
+            <h2>Credits & Attribution</h2>
+            <div id="credits-content" class="credits-content">
+                <!-- Credits loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Info Modal -->
+    <div id="image-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <button class="modal-close" id="close-image-modal">&times;</button>
+            <h2>Image Credit</h2>
+            <div id="image-credit-content" class="image-credit-content"></div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div id="shortcuts-help" class="shortcuts-help hidden">
+        <h3>Keyboard Shortcuts</h3>
+        <ul>
+            <li><kbd>→</kbd> Next player</li>
+            <li><kbd>Enter</kbd> Submit answer</li>
+            <li><kbd>⌫</kbd> Undo last reveal</li>
+            <li><kbd>N</kbd> Next round</li>
+            <li><kbd>M</kbd> Mute/unmute</li>
+            <li><kbd>F</kbd> Fullscreen</li>
+            <li><kbd>?</kbd> Toggle this help</li>
+        </ul>
+    </div>
+
+    <script src="js/sounds.js"></script>
+    <script src="js/embedded-packs.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointless - Pack Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Categories List */
+        .categories-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .category-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .category-item.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .category-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .category-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            margin-left: 10px;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .category-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Answers Table */
+        .answers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .answers-table th,
+        .answers-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .answers-table th {
+            font-family: 'Oswald', sans-serif;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .answers-table input {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 5px 8px;
+        }
+
+        .answers-table input:hover,
+        .answers-table input:focus {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .answers-table .points-input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .answers-table .delete-btn {
+            background: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+        }
+
+        .answers-table .delete-btn:hover {
+            color: #ff4757;
+        }
+
+        /* Quick Add */
+        .quick-add {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .quick-add h3 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .quick-add-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        /* Import/Export */
+        .import-export {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .import-export input[type="file"] {
+            display: none;
+        }
+
+        /* JSON Preview */
+        .json-preview {
+            background: #0d0d1a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .json-preview pre {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #8be9fd;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        /* Bulk Add Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-family: 'Oswald', sans-serif;
+            color: #667eea;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .help-text {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 3px solid #667eea;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+
+            .form-group {
+                min-width: 100%;
+            }
+
+            .answers-table {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>POINTLESS PACK BUILDER</h1>
+        <p class="subtitle">Create custom question packs for your Pointless game</p>
+
+        <!-- Pack Info -->
+        <div class="panel">
+            <h2>Pack Information</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pack-title">Pack Title</label>
+                    <input type="text" id="pack-title" placeholder="e.g., Family Quiz Night Pack">
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="category-count">0</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="answer-count">0</div>
+                    <div class="stat-label">Total Answers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="pointless-count">0</div>
+                    <div class="stat-label">Pointless Answers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export -->
+        <div class="panel">
+            <h2>Import / Export</h2>
+            <div class="import-export">
+                <input type="file" id="import-file" accept=".json">
+                <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import JSON</button>
+                <button class="btn btn-primary" onclick="exportPack()">Export Pack</button>
+                <button class="btn btn-secondary" onclick="showPreview()">Preview JSON</button>
+                <button class="btn btn-danger" onclick="clearAll()">Clear All</button>
+            </div>
+            <div class="json-preview" id="json-preview" style="display: none;">
+                <pre id="json-content"></pre>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="panel">
+            <h2>Categories</h2>
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="new-category-prompt">Category Prompt</label>
+                    <input type="text" id="new-category-prompt" placeholder="e.g., Name a country in Europe">
+                </div>
+                <div class="form-group" style="flex: 1; max-width: 200px;">
+                    <label for="new-category-type">Question Type</label>
+                    <select id="new-category-type">
+                        <option value="standard">Standard</option>
+                        <option value="anagram">Anagram</option>
+                        <option value="picture">Picture</option>
+                        <option value="missing_word">Missing Word</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 0; align-self: flex-end;">
+                    <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
+                </div>
+            </div>
+            <div class="categories-list" id="categories-list">
+                <!-- Categories will be listed here -->
+            </div>
+        </div>
+
+        <!-- Answer Editor -->
+        <div class="panel" id="answer-editor" style="display: none;">
+            <h2>Answers for: <span id="current-category-title"></span></h2>
+            <p class="help-text">
+                Points should be 0-100. 0 = Pointless (very obscure), 100 = Most popular.
+                Aliases are alternative accepted answers (comma-separated).
+            </p>
+
+            <div class="quick-add">
+                <h3>Quick Add Answer</h3>
+                <div class="quick-add-row">
+                    <div class="form-group" style="flex: 2;">
+                        <input type="text" id="quick-answer" placeholder="Answer text">
+                    </div>
+                    <div class="form-group" style="flex: 0.5; max-width: 80px;">
+                        <input type="number" id="quick-points" placeholder="Pts" min="0" max="100" value="50">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <input type="text" id="quick-aliases" placeholder="Aliases (comma-separated)">
+                    </div>
+                    <button class="btn btn-success" onclick="quickAddAnswer()">Add</button>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="openBulkAdd()">Bulk Add</button>
+                <button class="btn btn-secondary" onclick="sortAnswers()">Sort by Points</button>
+                <button class="btn btn-danger" onclick="clearAnswers()">Clear Answers</button>
+            </div>
+
+            <table class="answers-table" id="answers-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Answer</th>
+                        <th style="width: 80px;">Points</th>
+                        <th>Aliases</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="answers-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bulk Add Modal -->
+    <div class="modal" id="bulk-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bulk Add Answers</h2>
+                <button class="modal-close" onclick="closeBulkAdd()">&times;</button>
+            </div>
+            <div class="help-text">
+                Enter one answer per line. Format: <code>Answer Text, Points, Alias1, Alias2...</code><br>
+                Example:<br>
+                <code>London, 98</code><br>
+                <code>Paris, 97</code><br>
+                <code>Rome, 90, Roma</code>
+            </div>
+            <textarea id="bulk-text" rows="15" placeholder="Enter answers here..."></textarea>
+            <div class="btn-group" style="margin-top: 15px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeBulkAdd()">Cancel</button>
+                <button class="btn btn-success" onclick="processBulkAdd()">Add All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pack data structure
+        let pack = {
+            title: 'New Pack',
+            version: 1,
+            generatedAt: new Date().toISOString(),
+            categories: []
+        };
+
+        let currentCategoryIndex = -1;
+
+        // Initialize
+        document.getElementById('pack-title').addEventListener('input', (e) => {
+            pack.title = e.target.value;
+        });
+
+        document.getElementById('import-file').addEventListener('change', importPack);
+
+        document.getElementById('quick-answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') quickAddAnswer();
+        });
+
+        // Category functions
+        function addCategory() {
+            const prompt = document.getElementById('new-category-prompt').value.trim();
+            const type = document.getElementById('new-category-type').value;
+
+            if (!prompt) {
+                alert('Please enter a category prompt');
+                return;
+            }
+
+            const id = prompt.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
+
+            pack.categories.push({
+                id: id,
+                prompt: prompt,
+                type: type,
+                answers: []
+            });
+
+            document.getElementById('new-category-prompt').value = '';
+            renderCategories();
+            updateStats();
+
+            // Auto-select the new category
+            selectCategory(pack.categories.length - 1);
+        }
+
+        function renderCategories() {
+            const list = document.getElementById('categories-list');
+
+            if (pack.categories.length === 0) {
+                list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No categories yet. Add one above!</p>';
+                return;
+            }
+
+            list.innerHTML = pack.categories.map((cat, i) => `
+                <div class="category-item ${i === currentCategoryIndex ? 'active' : ''}" onclick="selectCategory(${i})">
+                    <div class="category-info">
+                        <div class="category-title">
+                            ${cat.prompt}
+                            <span class="category-type">${cat.type || 'standard'}</span>
+                        </div>
+                        <div class="category-meta">${cat.answers.length} answers</div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn btn-secondary" onclick="event.stopPropagation(); editCategory(${i})">Edit</button>
+                        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteCategory(${i})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(index) {
+            currentCategoryIndex = index;
+            renderCategories();
+            showAnswerEditor();
+        }
+
+        function editCategory(index) {
+            const cat = pack.categories[index];
+            const newPrompt = prompt('Edit category prompt:', cat.prompt);
+            if (newPrompt !== null && newPrompt.trim()) {
+                cat.prompt = newPrompt.trim();
+                renderCategories();
+            }
+        }
+
+        function deleteCategory(index) {
+            if (confirm('Delete this category and all its answers?')) {
+                pack.categories.splice(index, 1);
+                if (currentCategoryIndex === index) {
+                    currentCategoryIndex = -1;
+                    document.getElementById('answer-editor').style.display = 'none';
+                } else if (currentCategoryIndex > index) {
+                    currentCategoryIndex--;
+                }
+                renderCategories();
+                updateStats();
+            }
+        }
+
+        // Answer functions
+        function showAnswerEditor() {
+            const editor = document.getElementById('answer-editor');
+            const cat = pack.categories[currentCategoryIndex];
+
+            document.getElementById('current-category-title').textContent = cat.prompt;
+            editor.style.display = 'block';
+            renderAnswers();
+        }
+
+        function renderAnswers() {
+            const cat = pack.categories[currentCategoryIndex];
+            const tbody = document.getElementById('answers-body');
+
+            if (cat.answers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888; padding: 20px;">No answers yet. Add some above!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = cat.answers.map((ans, i) => `
+                <tr>
+                    <td><input type="text" value="${escapeHtml(ans.text)}" onchange="updateAnswer(${i}, 'text', this.value)"></td>
+                    <td><input type="number" class="points-input" value="${ans.points}" min="0" max="100" onchange="updateAnswer(${i}, 'points', parseInt(this.value))"></td>
+                    <td><input type="text" value="${(ans.aliases || []).join(', ')}" onchange="updateAnswer(${i}, 'aliases', this.value)"></td>
+                    <td><button class="delete-btn" onclick="deleteAnswer(${i})">&times;</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function quickAddAnswer() {
+            const text = document.getElementById('quick-answer').value.trim();
+            const points = parseInt(document.getElementById('quick-points').value) || 50;
+            const aliasesStr = document.getElementById('quick-aliases').value.trim();
+            const aliases = aliasesStr ? aliasesStr.split(',').map(a => a.trim()).filter(a => a) : [];
+
+            if (!text) {
+                alert('Please enter an answer');
+                return;
+            }
+
+            const cat = pack.categories[currentCategoryIndex];
+            cat.answers.push({ text, points, aliases });
+
+            document.getElementById('quick-answer').value = '';
+            document.getElementById('quick-aliases').value = '';
+            document.getElementById('quick-answer').focus();
+
+            renderAnswers();
+            updateStats();
+        }
+
+        function updateAnswer(index, field, value) {
+            const cat = pack.categories[currentCategoryIndex];
+            if (field === 'aliases') {
+                cat.answers[index].aliases = value.split(',').map(a => a.trim()).filter(a => a);
+            } else {
+                cat.answers[index][field] = value;
+            }
+            updateStats();
+        }
+
+        function deleteAnswer(index) {
+            const cat = pack.categories[currentCategoryIndex];
+            cat.answers.splice(index, 1);
+            renderAnswers();
+            updateStats();
+        }
+
+        function sortAnswers() {
+            const cat = pack.categories[currentCategoryIndex];
+            cat.answers.sort((a, b) => b.points - a.points);
+            renderAnswers();
+        }
+
+        function clearAnswers() {
+            if (confirm('Clear all answers for this category?')) {
+                pack.categories[currentCategoryIndex].answers = [];
+                renderAnswers();
+                updateStats();
+            }
+        }
+
+        // Bulk add
+        function openBulkAdd() {
+            document.getElementById('bulk-modal').classList.add('active');
+            document.getElementById('bulk-text').focus();
+        }
+
+        function closeBulkAdd() {
+            document.getElementById('bulk-modal').classList.remove('active');
+            document.getElementById('bulk-text').value = '';
+        }
+
+        function processBulkAdd() {
+            const text = document.getElementById('bulk-text').value;
+            const lines = text.split('\n').filter(line => line.trim());
+            const cat = pack.categories[currentCategoryIndex];
+
+            let added = 0;
+            lines.forEach(line => {
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length >= 1 && parts[0]) {
+                    const answer = {
+                        text: parts[0],
+                        points: parseInt(parts[1]) || 50,
+                        aliases: parts.slice(2).filter(a => a)
+                    };
+                    cat.answers.push(answer);
+                    added++;
+                }
+            });
+
+            closeBulkAdd();
+            renderAnswers();
+            updateStats();
+            alert(`Added ${added} answers!`);
+        }
+
+        // Import/Export
+        function importPack(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    pack = imported;
+                    document.getElementById('pack-title').value = pack.title || '';
+                    currentCategoryIndex = -1;
+                    document.getElementById('answer-editor').style.display = 'none';
+                    renderCategories();
+                    updateStats();
+                    alert('Pack imported successfully!');
+                } catch (err) {
+                    alert('Error importing pack: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function exportPack() {
+            pack.generatedAt = new Date().toISOString();
+
+            // Clean up the pack for export
+            const exportData = {
+                title: pack.title,
+                version: pack.version,
+                generatedAt: pack.generatedAt,
+                categories: pack.categories.map(cat => ({
+                    id: cat.id,
+                    prompt: cat.prompt,
+                    type: cat.type !== 'standard' ? cat.type : undefined,
+                    answers: cat.answers.map(a => ({
+                        text: a.text,
+                        points: a.points,
+                        aliases: a.aliases && a.aliases.length > 0 ? a.aliases : []
+                    }))
+                }))
+            };
+
+            const json = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pack.json';
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        function showPreview() {
+            const preview = document.getElementById('json-preview');
+            const content = document.getElementById('json-content');
+
+            if (preview.style.display === 'none') {
+                pack.generatedAt = new Date().toISOString();
+                content.textContent = JSON.stringify(pack, null, 2);
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear everything and start fresh?')) {
+                pack = {
+                    title: '',
+                    version: 1,
+                    generatedAt: new Date().toISOString(),
+                    categories: []
+                };
+                document.getElementById('pack-title').value = '';
+                currentCategoryIndex = -1;
+                document.getElementById('answer-editor').style.display = 'none';
+                renderCategories();
+                updateStats();
+            }
+        }
+
+        // Stats
+        function updateStats() {
+            const totalAnswers = pack.categories.reduce((sum, cat) => sum + cat.answers.length, 0);
+            const pointlessAnswers = pack.categories.reduce((sum, cat) =>
+                sum + cat.answers.filter(a => a.points === 0).length, 0);
+
+            document.getElementById('category-count').textContent = pack.categories.length;
+            document.getElementById('answer-count').textContent = totalAnswers;
+            document.getElementById('pointless-count').textContent = pointlessAnswers;
+        }
+
+        // Utility
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Initial render
+        renderCategories();
+        updateStats();
+    </script>
+</body>
+</html>

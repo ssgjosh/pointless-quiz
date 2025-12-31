@@ -1,0 +1,327 @@
+Goal
+
+Build a TV-friendly quiz game where players aim to give a correct answer with the lowest score. Scores are generated from real public data so they’re “genuine”, not made up.
+
+Target audience
+
+A small group playing in a living room. Must be:
+
+easy to read from a sofa
+
+easy to host (keyboard + big on-screen buttons)
+
+simple English (“category + give an answer”)
+
+1) Core game rules (party-friendly “Pointless style”)
+Game mode: Party mode (no elimination)
+
+Supports 5 players (or 2 teams + host).
+
+Everyone answers each round.
+
+Lowest total score at the end wins.
+
+Scoring
+
+Correct answers score 0–100, where 0 is best (“pointless”), higher is worse.
+
+Wrong / not in list / repeated / time-out = 100.
+
+Rounds
+
+Default: 10 rounds (configurable 5–20).
+
+Each round:
+
+show a category prompt (“Name a US state”, “Name a country in the EU”, etc.)
+
+each player gives 1 answer
+
+reveal score + optional image
+
+update leaderboard
+
+Optional “Final”
+
+A final round where each player gives 3 answers from one category; their final score is the best (lowest) one or the sum of the three (toggle).
+
+2) Data requirements: genuinely public + automatically generated
+Approved data sources
+
+Use these, and build the game around them:
+
+Wikidata (WDQS SPARQL) for category lists (answers, aliases, IDs, etc.). 
+Wikidata
+
+Wikimedia Commons images via Wikidata (prefer Wikidata image properties like P18, flags, etc.). 
+Wikidata
+
+Wikipedia/Wikimedia pageviews to compute a real popularity score. 
+Wikimedia Open Source
+
+MediaWiki API imageinfo to fetch image URLs + metadata needed for attribution (including extmetadata). 
+MediaWiki
++1
+
+Only use Commons media (it’s free-licensed content; no fair use). 
+Wikimedia Commons
+
+Data pipeline (important: do this as a “pack builder”)
+
+Do not call APIs constantly during gameplay. Instead:
+
+Provide a pack builder CLI that generates a pack.json from category definitions.
+
+The pack builder:
+
+runs SPARQL to get the allowed answers for each category
+
+fetches pageviews (or another public metric)
+
+assigns points 0–100
+
+fetches an image per answer when available
+
+stores image URL + attribution text + licence info in the pack
+
+Result: the game runs smoothly even if Wi‑Fi is flaky.
+
+3) How to compute “Pointless” scores from real data
+Default scoring metric: Wikipedia pageviews (real numbers)
+
+For each answer item:
+
+find its English Wikipedia article title (if present)
+
+fetch pageviews for a fixed window (e.g. last 365 days or last 90 days)
+
+compute popularity from total views
+
+Then map to points:
+
+Let pop = log10(pageviews + 1) (log avoids mega-famous items flattening everything)
+
+Normalise within the category:
+
+norm = (pop - minPop) / (maxPop - minPop) (handle edge cases)
+
+Points = round(norm * 100)
+
+This makes the least-viewed item(s) land near 0, most-viewed near 100.
+
+Make “pointless answers” common (so it feels right)
+
+Add a rule:
+
+any answer in the bottom 10% of popularity => 0 points
+This creates multiple 0s like the show.
+
+Fallback metric (if pageviews not available)
+
+If there’s no Wikipedia article:
+
+use Wikidata sitelinks count (or mark as “low confidence” and set points based on rank).
+(Implementation detail: can be fetched in SPARQL, avoids extra API calls.)
+
+4) Images: automatic, licensed, and credited
+Image selection strategy
+
+For each answer, try in this order (configurable per category):
+
+flag image / coat of arms / locator map properties when relevant (countries, regions)
+
+image (P18) as general fallback 
+Wikidata
+
+Getting a usable image URL
+
+Take the Commons filename from Wikidata
+
+Call MediaWiki action=query&prop=imageinfo&iiprop=url|extmetadata to get:
+
+a direct URL / thumbnail URL
+
+author/credit/licence fields needed for attribution 
+MediaWiki
++1
+
+Attribution (must be built-in)
+
+Add an “Info / Credits” overlay in-game:
+
+shows the licence + author credit for any image used
+
+shows a pack-level credits screen at the end
+
+Commons content is free-licensed, but you still have to follow the licence terms (attribution etc.). 
+Wikimedia Commons
+
+5) UI/UX: TV-first, “proper quiz show” feel, but original
+Look and feel
+
+Original styling inspired by a modern quiz board:
+
+large category title
+
+huge score reveal
+
+clean leaderboard
+
+No copying the real show’s layout 1:1. Keep it “quiz night”, not a clone.
+
+Animations
+
+Must include:
+
+category intro animation (1–2 seconds)
+
+“thinking” state (subtle pulsing timer bar)
+
+score reveal animation (counting up/down effect)
+
+special animation for 0 points (small celebration / confetti / glow)
+
+optional “reduce motion” toggle
+
+Sound effects
+
+Must have: correct, wrong (100), “pointless” (0), round start, round end
+
+Must have mute + volume slider
+
+Only use:
+
+CC0 / CC-BY sounds (with attribution if needed) — e.g. Freesound explains attribution expectations for their CC licences 
+Freesound
+
+OR BBC Sound Effects only for personal/non-commercial use (party night is fine; don’t ship commercially). Third-party reporting describes the Rem moderated archive licence as personal/educational/research only. 
+Mixmag
++1
+
+Also: audio must only play after a user gesture (browser autoplay rules).
+
+6) Hosting controls (make it dead easy)
+Host view (single laptop screen)
+
+Big “Next player” button
+
+Input box for answer
+
+Autocomplete dropdown:
+
+as host types, show best matches from the allowed answers list (including aliases)
+
+host clicks to confirm the intended answer (avoids spelling arguments)
+
+Keyboard shortcuts
+
+→ next player
+
+Enter confirm answer
+
+Backspace undo last reveal
+
+N next round
+
+M mute
+
+F fullscreen
+
+7) Pack format: easy to add more data
+Category definitions (authoring format)
+
+People should be able to add a category with:
+
+a title
+
+a prompt
+
+a SPARQL query OR a manual list
+
+image preferences
+
+scoring window (90d/365d) and “0% threshold”
+
+Use a simple YAML format like:
+
+title: "Pointless Night Pack (UK-ish)"
+version: 1
+categories:
+  - id: eu_countries
+    prompt: "Name a country in the European Union"
+    sparql: |
+      SELECT ?item ?itemLabel (COALESCE(?flag, ?img) AS ?image) ?article WHERE {
+        ?item wdt:P463 wd:Q458.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+      thumb_width: 800
+
+
+The pack builder turns that into a runtime pack.json with:
+
+answers[] entries (canonical text + aliases + points + image + attribution)
+
+validation hashes so results are reproducible
+
+8) Deliverables
+App
+
+index.html / single-page app
+
+TV-friendly layout, full-screen
+
+runs from a local static server
+
+Tools
+
+pack-builder CLI:
+
+input: YAML category definitions
+
+output: packs/<name>/pack.json
+
+caches results
+
+rate-limits API calls
+
+Content
+
+at least 2 sample packs:
+
+“UK General” (countries, counties, rivers, etc.)
+
+“Pop Culture (safe)” (bands, books, etc. — avoid posters/logos if licensing is messy)
+
+Documentation
+
+README.md:
+
+how to run
+
+how to cast to TV
+
+how to add a category
+
+how attribution works
+
+how scoring is computed
+
+Notes on “real Pointless data”
+
+If you mean “use actual boards from the TV show”: fan sites do exist that list questions/answers/scores. 
+pointlessarchive.blogspot.com
+
+But that content is still almost certainly owned by the producers/BBC. For a private one-off at home, you can manually type in what you’ve seen on TV, but I would not build an automated importer/scraper or publish/share packs that reproduce show boards.
+
+If you want, I can also give you
+
+10–15 ready-made SPARQL category definitions that work well and tend to have images (flags, animals, landmarks, etc.), tuned for “UK living room” difficulty.

@@ -1,0 +1,20 @@
+﻿{
+  "id": "u2-albums",
+  "prompt": "Name one of U2's studio albums",
+  "answers": [
+    { "text": "The Joshua Tree", "points": 72, "aliases": ["Joshua Tree"] },
+    { "text": "Achtung Baby", "points": 58, "aliases": [] },
+    { "text": "War", "points": 52, "aliases": [] },
+    { "text": "The Unforgettable Fire", "points": 35, "aliases": ["Unforgettable Fire"] },
+    { "text": "All That You Can't Leave Behind", "points": 42, "aliases": ["All That You Cant Leave Behind"] },
+    { "text": "How to Dismantle an Atomic Bomb", "points": 32, "aliases": [] },
+    { "text": "Boy", "points": 28, "aliases": [] },
+    { "text": "Zooropa", "points": 22, "aliases": [] },
+    { "text": "Pop", "points": 18, "aliases": [] },
+    { "text": "Rattle and Hum", "points": 38, "aliases": [] },
+    { "text": "October", "points": 15, "aliases": [] },
+    { "text": "No Line on the Horizon", "points": 12, "aliases": [] },
+    { "text": "Songs of Innocence", "points": 8, "aliases": [] },
+    { "text": "Songs of Experience", "points": 5, "aliases": [] }
+  ]
+}

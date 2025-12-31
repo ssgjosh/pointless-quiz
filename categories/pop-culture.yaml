@@ -1,0 +1,197 @@
+title: "Pop Culture"
+version: 1
+categories:
+  - id: beatles_songs
+    prompt: "Name a song by The Beatles"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q134556.
+        ?item wdt:P175 wd:Q1299.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 15
+    images:
+      enabled: false
+
+  - id: disney_animated
+    prompt: "Name a Disney animated feature film"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q202866.
+        ?item wdt:P272 wd:Q191224.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: bond_films
+    prompt: "Name a James Bond film"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q11424.
+        ?item wdt:P179 wd:Q2783.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: pixar_films
+    prompt: "Name a Pixar animated film"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q11424.
+        ?item wdt:P272 wd:Q3596.
+        ?item wdt:P31 wd:Q202866.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: oscar_best_picture
+    prompt: "Name a film that won the Oscar for Best Picture"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P166 wd:Q102427.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: shakespeare_plays
+    prompt: "Name a play written by William Shakespeare"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q25379.
+        ?item wdt:P50 wd:Q692.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: harry_potter_characters
+    prompt: "Name a character from the Harry Potter series"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P1441 wd:Q8337.
+        ?item wdt:P31 wd:Q15632617.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+      LIMIT 100
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 15
+    images:
+      enabled: false
+
+  - id: marvel_films
+    prompt: "Name a Marvel Cinematic Universe film"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q11424.
+        ?item wdt:P179 wd:Q642878.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: dickens_novels
+    prompt: "Name a novel by Charles Dickens"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q7725634.
+        ?item wdt:P50 wd:Q5686.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: false
+
+  - id: queen_songs
+    prompt: "Name a song by Queen"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q134556.
+        ?item wdt:P175 wd:Q15862.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 15
+    images:
+      enabled: false
+
+  - id: doctor_who_actors
+    prompt: "Name an actor who has played the Doctor in Doctor Who"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q5.
+        ?item wdt:P800 ?work.
+        ?work wdt:P1441 wd:Q34316.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: agatha_christie
+    prompt: "Name a novel by Agatha Christie"
+    sparql: |
+      SELECT ?item ?itemLabel ?article WHERE {
+        ?item wdt:P31 wd:Q7725634.
+        ?item wdt:P50 wd:Q35064.
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 15
+    images:
+      enabled: false

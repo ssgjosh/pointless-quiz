@@ -1,0 +1,228 @@
+title: "UK General Knowledge"
+version: 1
+categories:
+  - id: eu_countries
+    prompt: "Name a country that is currently a member of the European Union"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P463 wd:Q458.
+        ?item wdt:P31 wd:Q6256.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+      thumb_width: 800
+
+  - id: uk_counties
+    prompt: "Name a ceremonial county of England"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q180673.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: us_states
+    prompt: "Name a US state"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P31 wd:Q35657.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: world_capitals
+    prompt: "Name a capital city of a country in the world"
+    sparql: |
+      SELECT DISTINCT ?item ?itemLabel ?article ?image WHERE {
+        ?country wdt:P31 wd:Q6256.
+        ?country wdt:P36 ?item.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: african_countries
+    prompt: "Name a country in Africa"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P31 wd:Q6256.
+        ?item wdt:P30 wd:Q15.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: south_american_countries
+    prompt: "Name a country in South America"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P31 wd:Q6256.
+        ?item wdt:P30 wd:Q18.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: uk_rivers
+    prompt: "Name a river in the United Kingdom"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q4022.
+        ?item wdt:P17 wd:Q145.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+      LIMIT 150
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 15
+    images:
+      enabled: true
+
+  - id: chemical_elements
+    prompt: "Name a chemical element"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q11344.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: asian_countries
+    prompt: "Name a country in Asia"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P31 wd:Q6256.
+        ?item wdt:P30 wd:Q48.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: london_boroughs
+    prompt: "Name a London borough"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q211690.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: european_countries
+    prompt: "Name a country in Europe"
+    sparql: |
+      SELECT ?item ?itemLabel ?article (COALESCE(?flag, ?img) AS ?image) WHERE {
+        ?item wdt:P31 wd:Q6256.
+        ?item wdt:P30 wd:Q46.
+        OPTIONAL { ?item wdt:P41 ?flag. }
+        OPTIONAL { ?item wdt:P18 ?img. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true
+
+  - id: planets
+    prompt: "Name a planet in our Solar System"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q634.
+        ?item wdt:P397 wd:Q525.
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 0
+    images:
+      enabled: true
+
+  - id: languages
+    prompt: "Name a language spoken by more than 50 million people"
+    sparql: |
+      SELECT ?item ?itemLabel ?article ?image WHERE {
+        ?item wdt:P31 wd:Q34770.
+        ?item wdt:P1098 ?speakers.
+        FILTER(?speakers > 50000000)
+        OPTIONAL { ?item wdt:P18 ?image. }
+        OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+    scoring:
+      metric: "wikipedia_pageviews"
+      window_days: 365
+      pointless_percentile: 10
+    images:
+      enabled: true

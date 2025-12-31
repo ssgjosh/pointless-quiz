@@ -1,0 +1,5 @@
+{
+  "name": "pointless-quiz",
+  "main": "party/server.ts",
+  "compatibilityDate": "2024-01-01"
+}

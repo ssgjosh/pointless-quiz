@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointless - Host View</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Host-specific styles */
+        .join-banner {
+            background: linear-gradient(135deg, #1a1a3a 0%, #2a2a5a 100%);
+            border: 3px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .join-url {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+        .game-code {
+            font-family: 'Oswald', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
+        }
+        .lobby-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .lobby-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3rem;
+            color: var(--accent-gold);
+            margin-bottom: 30px;
+        }
+        .players-waiting {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .player-card {
+            background: linear-gradient(180deg, #2a2a5a 0%, #1a1a3a 100%);
+            border: 2px solid var(--accent-pink);
+            border-radius: 10px;
+            padding: 20px 30px;
+            min-width: 150px;
+        }
+        .player-card.connected {
+            border-color: #4ade80;
+        }
+        .player-card.disconnected {
+            border-color: #ef4444;
+            opacity: 0.6;
+        }
+        .player-card .player-name {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+        .player-card .player-status {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        .player-card .player-status.typing {
+            color: var(--accent-gold);
+        }
+        .player-card .player-status.submitted {
+            color: #4ade80;
+        }
+        .waiting-message {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin: 20px 0;
+        }
+        .waiting-message .dot-animation {
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        .start-game-section {
+            margin-top: 40px;
+        }
+        .min-players-warning {
+            color: var(--accent-pink);
+            margin-bottom: 15px;
+        }
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .connection-status.connected {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            border: 1px solid #4ade80;
+        }
+        .connection-status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        .connection-status.reconnecting {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid #fbbf24;
+        }
+        /* Hide player inputs in multiplayer mode */
+        .host-input-area.multiplayer-mode {
+            display: none;
+        }
+        .multiplayer-status-area {
+            background: rgba(26, 26, 58, 0.9);
+            border: 2px solid var(--accent-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .current-turn-display {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+        }
+        .player-statuses {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .player-status-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--text-muted);
+        }
+        .player-status-chip.current {
+            border-color: var(--accent-gold);
+            background: rgba(218, 165, 32, 0.2);
+        }
+        .player-status-chip.typing {
+            border-color: #fbbf24;
+            animation: pulse 1s infinite;
+        }
+        .player-status-chip.submitted {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.2);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Status Indicator -->
+    <div id="connection-status" class="connection-status connected">Connected</div>
+
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="screen active">
+        <div class="lobby-container">
+            <h1 class="lobby-title">POINTLESS</h1>
+
+            <div class="join-banner">
+                <div class="join-url">Join at <strong id="join-url">pointless.game/join</strong></div>
+                <div class="game-code" id="game-code">----</div>
+            </div>
+
+            <div id="pack-info" class="pack-info">
+                <span id="pack-title">Loading pack...</span>
+            </div>
+
+            <h2>Players Joined</h2>
+            <div id="players-waiting" class="players-waiting">
+                <div class="waiting-message">Waiting for players to join<span class="dot-animation">...</span></div>
+            </div>
+
+            <div class="start-game-section">
+                <p id="min-players-warning" class="min-players-warning hidden">Need at least 1 player to start</p>
+                <button id="start-game-btn" class="btn btn-primary btn-large" disabled>START GAME</button>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button id="back-btn" class="btn btn-secondary">Back to Setup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen - Same as index.html but with multiplayer adaptations -->
+    <div id="game-screen" class="screen">
+        <!-- Category Introduction Overlay -->
+        <div id="category-intro" class="category-intro hidden">
+            <div class="category-intro-content">
+                <div class="round-number">ROUND <span id="intro-round-num">1</span></div>
+                <div class="category-prompt-intro" id="intro-category-prompt"></div>
+            </div>
+        </div>
+
+        <!-- Pointless Celebration Overlay -->
+        <div id="pointless-celebration" class="pointless-celebration hidden">
+            <div class="celebration-text">POINTLESS!</div>
+            <div class="celebration-subtitle">+£250 TO THE JACKPOT</div>
+            <div class="confetti-container" id="confetti-container"></div>
+        </div>
+
+        <!-- Round Results / Elimination Overlay (TV Show Mode) -->
+        <div id="round-results" class="round-results-overlay hidden">
+            <div class="round-results-content">
+                <div class="results-header">END OF ROUND <span id="results-round-num">1</span></div>
+                <div id="round-standings" class="round-standings"></div>
+                <div id="elimination-announcement" class="elimination-announcement hidden">
+                    <span class="eliminated-label">ELIMINATED</span>
+                    <span id="eliminated-player" class="eliminated-name"></span>
+                </div>
+                <button id="continue-btn" class="btn btn-primary btn-large">CONTINUE</button>
+            </div>
+        </div>
+
+        <!-- Main Stage Layout -->
+        <div class="game-stage">
+            <!-- Join Banner at top -->
+            <div class="join-banner" style="margin: 10px; padding: 10px 20px;">
+                <div class="join-url" style="font-size: 1rem; margin-bottom: 5px;">Join: <strong id="game-join-url">pointless.game/join</strong></div>
+                <div class="game-code" id="game-code-display" style="font-size: 2rem; letter-spacing: 0.2em;">----</div>
+            </div>
+
+            <!-- Top: Category/Question Display -->
+            <div class="stage-header">
+                <div class="header-top-row">
+                    <div class="round-badge">Round <span id="current-round">1</span>/<span id="total-rounds">10</span></div>
+                    <div class="jackpot-display">
+                        <span class="jackpot-label">JACKPOT</span>
+                        <span class="jackpot-amount" id="jackpot-amount">£1,000</span>
+                    </div>
+                </div>
+                <div class="category-display">
+                    <div class="category-prompt" id="category-prompt">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Middle: Main content area -->
+            <div class="stage-main">
+                <div class="stage-center">
+                    <!-- Current player indicator -->
+                    <div class="current-player-banner">
+                        <span id="current-player-name">Player 1</span>'s turn
+                    </div>
+
+                    <!-- Question Type Display Areas -->
+                    <div id="question-type-display" class="question-type-display">
+                        <div id="anagram-display" class="type-display hidden">
+                            <div class="scrambled-letters" id="scrambled-text">ELPMAXE</div>
+                            <div class="letter-hint">(<span id="letter-count">7</span> letters)</div>
+                        </div>
+                        <div id="picture-display" class="type-display hidden">
+                            <div class="picture-frame">
+                                <img id="question-image" src="" alt="Identify this">
+                            </div>
+                        </div>
+                        <div id="missing-word-display" class="type-display hidden">
+                            <div class="phrase-with-blank" id="phrase-text">The ___ King</div>
+                        </div>
+                    </div>
+
+                    <!-- Multiplayer Status Area (replaces host input) -->
+                    <div class="multiplayer-status-area">
+                        <div class="current-turn-display">
+                            Waiting for <span id="waiting-for-player">Player</span>...
+                        </div>
+                        <div id="player-statuses" class="player-statuses">
+                            <!-- Player status chips generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Timer -->
+                    <div id="timer-container" class="timer-container">
+                        <div id="timer-bar" class="timer-bar"></div>
+                        <span id="timer-text" class="timer-text">30</span>
+                    </div>
+
+                    <!-- Revealed Answer Display -->
+                    <div id="score-reveal-area" class="score-reveal-area hidden">
+                        <div class="revealed-answer" id="revealed-answer"></div>
+                        <div id="answer-image" class="answer-image hidden">
+                            <img id="answer-img" src="" alt="">
+                            <button id="image-info-btn" class="image-info-btn" title="Image credits">i</button>
+                        </div>
+                    </div>
+
+                    <!-- Answer Board -->
+                    <div class="answer-board" id="answer-board">
+                        <div class="answer-board-title">This Round</div>
+                        <div id="answer-board-entries"></div>
+                    </div>
+                </div>
+
+                <!-- Score Tower -->
+                <div class="score-tower">
+                    <div class="score-value-badge" id="score-value">100</div>
+                    <div class="score-bar-tower">
+                        <div class="score-bar" id="score-bar"></div>
+                        <div class="segment-lines">
+                            <span class="segment-mark" style="bottom: 0%">0</span>
+                            <span class="segment-mark" style="bottom: 25%">25</span>
+                            <span class="segment-mark" style="bottom: 50%">50</span>
+                            <span class="segment-mark" style="bottom: 75%">75</span>
+                            <span class="segment-mark" style="bottom: 100%">100</span>
+                        </div>
+                    </div>
+                    <div class="score-tower-label">POINTLESS</div>
+                </div>
+            </div>
+
+            <!-- Contestant Podiums -->
+            <div class="contestant-podiums" id="contestant-podiums"></div>
+
+            <!-- Host Controls -->
+            <div class="host-controls">
+                <button id="next-player-btn" class="btn btn-control">Next Player</button>
+                <button id="next-round-btn" class="btn btn-control">Next Round</button>
+                <div class="audio-controls">
+                    <button id="mute-btn" class="btn btn-icon" title="Mute">&#128266;</button>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70">
+                    <button id="fullscreen-btn" class="btn btn-icon" title="Fullscreen">&#9974;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="screen">
+        <div class="results-container">
+            <h1 class="results-title">GAME OVER</h1>
+            <div id="winner-announcement" class="winner-announcement"></div>
+            <div id="final-standings" class="final-standings"></div>
+            <div class="results-buttons">
+                <button id="play-again-btn" class="btn btn-primary btn-large">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/sounds.js"></script>
+    <script src="js/embedded-packs.js"></script>
+    <script type="module">
+        import { HostController } from './js/multiplayer/host-controller.js';
+
+        class PointlessHost {
+            constructor() {
+                this.controller = null;
+                this.pack = null;
+                this.settings = null;
+                this.soundManager = window.soundManager;
+
+                this.init();
+            }
+
+            init() {
+                // Get pack and settings from URL params
+                const params = new URLSearchParams(window.location.search);
+                const packId = params.get('pack');
+                const gameMode = params.get('mode') || 'party';
+                const rounds = parseInt(params.get('rounds')) || 5;
+                const timer = params.get('timer') === 'true';
+
+                // Try to get pack from sessionStorage first (passed from index.html)
+                const storedPack = sessionStorage.getItem('pointless-pack');
+                if (storedPack) {
+                    try {
+                        this.pack = JSON.parse(storedPack);
+                        sessionStorage.removeItem('pointless-pack'); // Clean up
+                    } catch (e) {
+                        console.error('Failed to parse stored pack:', e);
+                    }
+                }
+
+                // Fall back to finding pack by ID from embedded packs
+                if (!this.pack && packId && window.EMBEDDED_PACKS) {
+                    this.pack = window.EMBEDDED_PACKS.find(p => p.id === packId);
+                }
+
+                if (!this.pack && window.EMBEDDED_PACKS && window.EMBEDDED_PACKS.length > 0) {
+                    this.pack = window.EMBEDDED_PACKS[0];
+                }
+
+                this.settings = {
+                    totalRounds: rounds,
+                    timerEnabled: timer,
+                    timerDuration: 30,
+                    gameMode: gameMode
+                };
+
+                // Update pack info display
+                if (this.pack) {
+                    document.getElementById('pack-title').textContent = this.pack.title;
+                }
+
+                // Set join URL
+                const joinUrl = window.location.origin + '/player.html';
+                document.getElementById('join-url').textContent = joinUrl;
+                document.getElementById('game-join-url').textContent = joinUrl;
+
+                this.setupEventListeners();
+                this.createGame();
+            }
+
+            setupEventListeners() {
+                document.getElementById('start-game-btn').addEventListener('click', () => this.startGame());
+                document.getElementById('back-btn').addEventListener('click', () => {
+                    if (this.controller) {
+                        this.controller.disconnect();
+                    }
+                    window.location.href = 'index.html';
+                });
+                document.getElementById('next-player-btn').addEventListener('click', () => this.nextPlayer());
+                document.getElementById('next-round-btn').addEventListener('click', () => this.nextRound());
+                document.getElementById('continue-btn').addEventListener('click', () => this.continueFromResults());
+                document.getElementById('play-again-btn').addEventListener('click', () => {
+                    window.location.href = 'index.html';
+                });
+
+                // Audio controls
+                document.getElementById('mute-btn').addEventListener('click', () => {
+                    if (this.soundManager) {
+                        this.soundManager.toggleMute();
+                        document.getElementById('mute-btn').textContent = this.soundManager.isMuted ? '🔇' : '🔊';
+                    }
+                });
+
+                document.getElementById('volume-slider').addEventListener('input', (e) => {
+                    if (this.soundManager) {
+                        this.soundManager.setVolume(e.target.value / 100);
+                    }
+                });
+
+                document.getElementById('fullscreen-btn').addEventListener('click', () => {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight') this.nextPlayer();
+                    if (e.key === 'n' || e.key === 'N') this.nextRound();
+                    if (e.key === 'm' || e.key === 'M') {
+                        if (this.soundManager) this.soundManager.toggleMute();
+                    }
+                    if (e.key === 'f' || e.key === 'F') {
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        } else {
+                            document.documentElement.requestFullscreen();
+                        }
+                    }
+                });
+            }
+
+            async createGame() {
+                this.controller = new HostController({
+                    onStateSync: (state) => this.handleStateSync(state),
+                    onGameCreated: (code) => this.handleGameCreated(code),
+                    onPlayerJoined: (player) => this.handlePlayerJoined(player),
+                    onPlayerLeft: (playerId) => this.handlePlayerLeft(playerId),
+                    onPlayerTyping: (playerId, isTyping) => this.handlePlayerTyping(playerId, isTyping),
+                    onTurnStart: (playerId, playerName, timerDuration) => this.handleTurnStart(playerId, playerName, timerDuration),
+                    onScoreReveal: (data) => this.handleScoreReveal(data),
+                    onRoundEnd: (standings, eliminatedId) => this.handleRoundEnd(standings, eliminatedId),
+                    onGameEnd: (winner, standings) => this.handleGameEnd(winner, standings),
+                    onError: (message) => this.handleError(message),
+                    onDisconnected: () => this.handleDisconnected(),
+                    onReconnecting: (attempt) => this.handleReconnecting(attempt),
+                    onReconnectFailed: () => this.handleReconnectFailed()
+                });
+
+                try {
+                    const code = await this.controller.createGame(this.pack, this.settings);
+                    console.log('Game created with code:', code);
+                } catch (error) {
+                    console.error('Failed to create game:', error);
+                    alert('Failed to connect to game server. Please try again.');
+                }
+            }
+
+            handleGameCreated(code) {
+                document.getElementById('game-code').textContent = code;
+                document.getElementById('game-code-display').textContent = code;
+                this.updateConnectionStatus('connected');
+            }
+
+            handleStateSync(state) {
+                this.renderPlayers(state.players);
+                this.updateGameUI(state);
+
+                // Enable start button if we have players
+                const startBtn = document.getElementById('start-game-btn');
+                const warning = document.getElementById('min-players-warning');
+
+                if (state.players.length >= 1) {
+                    startBtn.disabled = false;
+                    warning.classList.add('hidden');
+                } else {
+                    startBtn.disabled = true;
+                    warning.classList.remove('hidden');
+                }
+            }
+
+            handlePlayerJoined(player) {
+                console.log('Player joined:', player.name);
+                if (this.soundManager) {
+                    this.soundManager.click();
+                }
+            }
+
+            handlePlayerLeft(playerId) {
+                console.log('Player left:', playerId);
+            }
+
+            handlePlayerTyping(playerId, isTyping) {
+                const chip = document.querySelector(`[data-player-id="${playerId}"]`);
+                if (chip) {
+                    chip.classList.toggle('typing', isTyping);
+                    if (isTyping) {
+                        chip.classList.remove('submitted');
+                    }
+                }
+            }
+
+            handleTurnStart(playerId, playerName, timerDuration) {
+                document.getElementById('waiting-for-player').textContent = playerName;
+                document.getElementById('current-player-name').textContent = playerName;
+
+                // Update player status chips
+                document.querySelectorAll('.player-status-chip').forEach(chip => {
+                    chip.classList.remove('current', 'typing', 'submitted');
+                    if (chip.dataset.playerId === playerId) {
+                        chip.classList.add('current');
+                    }
+                });
+
+                // Start timer if enabled
+                if (timerDuration) {
+                    this.startTimer(timerDuration);
+                }
+
+                // Hide score reveal area
+                document.getElementById('score-reveal-area').classList.add('hidden');
+            }
+
+            handleScoreReveal(data) {
+                const { playerName, answer, score, isCorrect, isPointless } = data;
+
+                // Show answer
+                document.getElementById('revealed-answer').textContent = answer;
+                document.getElementById('score-reveal-area').classList.remove('hidden');
+
+                // Animate score
+                this.animateScoreCountdown(score);
+
+                // Play sound
+                if (this.soundManager) {
+                    if (isPointless) {
+                        this.soundManager.pointless();
+                        this.showPointlessCelebration();
+                    } else if (isCorrect) {
+                        this.soundManager.correct();
+                    } else {
+                        this.soundManager.wrong();
+                    }
+                }
+
+                // Update answer board
+                this.addToAnswerBoard(playerName, answer, score, isCorrect);
+
+                // Mark player as submitted
+                const chip = document.querySelector(`[data-player-id="${data.playerId}"]`);
+                if (chip) {
+                    chip.classList.remove('typing', 'current');
+                    chip.classList.add('submitted');
+                }
+            }
+
+            handleRoundEnd(standings, eliminatedId) {
+                this.showScreen('game-screen');
+                document.getElementById('round-results').classList.remove('hidden');
+
+                const standingsEl = document.getElementById('round-standings');
+                standingsEl.innerHTML = standings.map((p, i) => `
+                    <div class="standing-row ${p.id === eliminatedId ? 'eliminated' : ''}">
+                        <span class="rank">${i + 1}</span>
+                        <span class="name">${p.name}</span>
+                        <span class="score">${p.score}</span>
+                    </div>
+                `).join('');
+
+                if (eliminatedId) {
+                    const eliminated = standings.find(p => p.id === eliminatedId);
+                    if (eliminated) {
+                        document.getElementById('eliminated-player').textContent = eliminated.name;
+                        document.getElementById('elimination-announcement').classList.remove('hidden');
+                    }
+                }
+            }
+
+            handleGameEnd(winner, standings) {
+                this.showScreen('results-screen');
+
+                document.getElementById('winner-announcement').innerHTML = `
+                    <div class="winner-name">${winner.name}</div>
+                    <div class="winner-score">Score: ${winner.score}</div>
+                `;
+
+                document.getElementById('final-standings').innerHTML = standings.map((p, i) => `
+                    <div class="standing-row ${i === 0 ? 'winner' : ''}">
+                        <span class="rank">${i + 1}</span>
+                        <span class="name">${p.name}</span>
+                        <span class="score">${p.score}</span>
+                    </div>
+                `).join('');
+
+                if (this.soundManager) {
+                    this.soundManager.gameOver();
+                }
+            }
+
+            handleError(message) {
+                console.error('Game error:', message);
+                alert('Error: ' + message);
+            }
+
+            handleDisconnected() {
+                this.updateConnectionStatus('disconnected');
+            }
+
+            handleReconnecting(attempt) {
+                this.updateConnectionStatus('reconnecting');
+            }
+
+            handleReconnectFailed() {
+                this.updateConnectionStatus('disconnected');
+                alert('Lost connection to game server. Please refresh to try again.');
+            }
+
+            updateConnectionStatus(status) {
+                const el = document.getElementById('connection-status');
+                el.className = 'connection-status ' + status;
+                el.textContent = status === 'connected' ? 'Connected' :
+                                 status === 'reconnecting' ? 'Reconnecting...' : 'Disconnected';
+            }
+
+            renderPlayers(players) {
+                const container = document.getElementById('players-waiting');
+
+                if (players.length === 0) {
+                    container.innerHTML = '<div class="waiting-message">Waiting for players to join<span class="dot-animation">...</span></div>';
+                    return;
+                }
+
+                container.innerHTML = players.map(p => `
+                    <div class="player-card ${p.connected ? 'connected' : 'disconnected'}">
+                        <div class="player-name">${p.name}</div>
+                        <div class="player-status">${p.connected ? 'Ready' : 'Disconnected'}</div>
+                    </div>
+                `).join('');
+
+                // Also update player status chips in game view
+                const statusContainer = document.getElementById('player-statuses');
+                if (statusContainer) {
+                    statusContainer.innerHTML = players.map(p => `
+                        <div class="player-status-chip" data-player-id="${p.id}">
+                            ${p.name}: ${p.score}
+                        </div>
+                    `).join('');
+                }
+
+                // Update podiums
+                this.renderPodiums(players);
+            }
+
+            renderPodiums(players) {
+                const container = document.getElementById('contestant-podiums');
+                if (!container) return;
+
+                container.innerHTML = players.map(p => `
+                    <div class="podium ${p.eliminated ? 'eliminated' : ''}">
+                        <div class="podium-name">${p.name}</div>
+                        <div class="podium-score">${p.score}</div>
+                    </div>
+                `).join('');
+            }
+
+            updateGameUI(state) {
+                if (state.phase === 'lobby') {
+                    this.showScreen('lobby-screen');
+                    return;
+                }
+
+                if (state.phase === 'gameOver') {
+                    return; // Handled by handleGameEnd
+                }
+
+                this.showScreen('game-screen');
+
+                // Update round info
+                document.getElementById('current-round').textContent = state.currentRound;
+                document.getElementById('total-rounds').textContent = state.totalRounds;
+                document.getElementById('intro-round-num').textContent = state.currentRound;
+                document.getElementById('results-round-num').textContent = state.currentRound;
+
+                // Update jackpot
+                document.getElementById('jackpot-amount').textContent = `£${state.jackpot.toLocaleString()}`;
+
+                // Update category
+                if (state.currentCategory) {
+                    document.getElementById('category-prompt').textContent = state.currentCategory.prompt;
+                    document.getElementById('intro-category-prompt').textContent = state.currentCategory.prompt;
+                }
+
+                // Update current player
+                if (state.currentPlayerId) {
+                    const currentPlayer = state.players.find(p => p.id === state.currentPlayerId);
+                    if (currentPlayer) {
+                        document.getElementById('current-player-name').textContent = currentPlayer.name;
+                        document.getElementById('waiting-for-player').textContent = currentPlayer.name;
+                    }
+                }
+
+                // Update answer board
+                this.updateAnswerBoard(state.answerBoardEntries);
+            }
+
+            updateAnswerBoard(entries) {
+                const container = document.getElementById('answer-board-entries');
+                if (!container) return;
+
+                container.innerHTML = entries.map(e => `
+                    <div class="board-entry ${e.isCorrect ? 'correct' : 'wrong'}">
+                        <span class="entry-player">${e.playerName}</span>
+                        <span class="entry-answer">${e.answer}</span>
+                        <span class="entry-score">${e.score}</span>
+                    </div>
+                `).join('');
+            }
+
+            addToAnswerBoard(playerName, answer, score, isCorrect) {
+                const container = document.getElementById('answer-board-entries');
+                if (!container) return;
+
+                const entry = document.createElement('div');
+                entry.className = `board-entry ${isCorrect ? 'correct' : 'wrong'}`;
+                entry.innerHTML = `
+                    <span class="entry-player">${playerName}</span>
+                    <span class="entry-answer">${answer}</span>
+                    <span class="entry-score">${score}</span>
+                `;
+                container.appendChild(entry);
+            }
+
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+            }
+
+            startGame() {
+                if (this.controller) {
+                    this.controller.startGame();
+                    if (this.soundManager) {
+                        this.soundManager.roundStart();
+                    }
+                }
+            }
+
+            nextPlayer() {
+                if (this.controller) {
+                    this.controller.nextPlayer();
+                }
+            }
+
+            nextRound() {
+                if (this.controller) {
+                    this.controller.nextRound();
+                    if (this.soundManager) {
+                        this.soundManager.roundStart();
+                    }
+                }
+            }
+
+            continueFromResults() {
+                document.getElementById('round-results').classList.add('hidden');
+                document.getElementById('elimination-announcement').classList.add('hidden');
+                this.nextRound();
+            }
+
+            startTimer(duration) {
+                const container = document.getElementById('timer-container');
+                const bar = document.getElementById('timer-bar');
+                const text = document.getElementById('timer-text');
+
+                container.style.display = 'block';
+                let remaining = duration;
+
+                const tick = () => {
+                    text.textContent = remaining;
+                    bar.style.width = `${(remaining / duration) * 100}%`;
+
+                    if (remaining <= 10) {
+                        container.classList.add('warning');
+                    }
+
+                    if (remaining > 0) {
+                        remaining--;
+                        setTimeout(tick, 1000);
+                    } else {
+                        container.classList.remove('warning');
+                        container.style.display = 'none';
+                    }
+                };
+
+                tick();
+            }
+
+            animateScoreCountdown(targetScore) {
+                const valueEl = document.getElementById('score-value');
+                const barEl = document.getElementById('score-bar');
+
+                let current = 100;
+                const duration = 2000;
+                const steps = 100 - targetScore;
+                const stepDuration = steps > 0 ? duration / steps : duration;
+
+                const tick = () => {
+                    valueEl.textContent = current;
+                    barEl.style.height = `${current}%`;
+
+                    if (current > targetScore) {
+                        current--;
+                        if (this.soundManager && current % 5 === 0) {
+                            this.soundManager.tick();
+                        }
+                        setTimeout(tick, stepDuration);
+                    }
+                };
+
+                tick();
+            }
+
+            showPointlessCelebration() {
+                const celebration = document.getElementById('pointless-celebration');
+                celebration.classList.remove('hidden');
+
+                // Create confetti
+                const container = document.getElementById('confetti-container');
+                container.innerHTML = '';
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = `${Math.random() * 100}%`;
+                    confetti.style.animationDelay = `${Math.random() * 2}s`;
+                    confetti.style.backgroundColor = ['#e91e8c', '#daa520', '#4ade80', '#60a5fa'][Math.floor(Math.random() * 4)];
+                    container.appendChild(confetti);
+                }
+
+                setTimeout(() => {
+                    celebration.classList.add('hidden');
+                }, 3500);
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize sound manager
+            if (window.SoundManager) {
+                window.soundManager = new SoundManager();
+                document.body.addEventListener('click', () => {
+                    window.soundManager.init();
+                }, { once: true });
+            }
+
+            new PointlessHost();
+        });
+    </script>
+</body>
+</html>

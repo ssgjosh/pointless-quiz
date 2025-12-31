@@ -1,0 +1,31 @@
+{
+  "name": "pointless-game",
+  "version": "1.1.0",
+  "description": "A TV-friendly quiz game where players aim for the lowest score - just like the show!",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build-pack": "node pack-builder/index.js",
+    "serve": "npx http-server . -p 8080 -o",
+    "start": "npx http-server . -p 8080 -o",
+    "server": "node server.js",
+    "party:dev": "npx partykit dev",
+    "party:deploy": "npx partykit deploy"
+  },
+  "keywords": [
+    "quiz",
+    "game",
+    "pointless",
+    "trivia",
+    "party",
+    "multiplayer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "partykit": "^0.0.107",
+    "partysocket": "^1.0.1",
+    "ws": "^8.18.3",
+    "yaml": "^2.3.4"
+  }
+}

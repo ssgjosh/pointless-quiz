@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Pointless - Join Game</title>
+    <link rel="stylesheet" href="css/player.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Connection Status Banner -->
+    <div id="connection-banner" class="connection-banner hidden">
+        <span id="connection-message">Reconnecting...</span>
+    </div>
+
+    <!-- Join Screen -->
+    <div id="join-screen" class="screen active">
+        <div class="screen-content">
+            <h1 class="game-title">POINTLESS</h1>
+            <p class="subtitle">Join the game</p>
+
+            <div class="form-group">
+                <label for="game-code-input">Game Code</label>
+                <input
+                    type="text"
+                    id="game-code-input"
+                    maxlength="4"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    autocorrect="off"
+                    spellcheck="false"
+                    placeholder="ABCD"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="player-name-input">Your Name</label>
+                <input
+                    type="text"
+                    id="player-name-input"
+                    maxlength="20"
+                    autocomplete="off"
+                    autocorrect="off"
+                    placeholder="Enter your name"
+                >
+            </div>
+
+            <button id="join-btn" class="btn btn-primary btn-large">JOIN GAME</button>
+
+            <div id="join-error" class="error-message hidden"></div>
+
+            <button id="settings-btn" class="btn-icon settings-btn" title="Settings">&#9881;</button>
+        </div>
+    </div>
+
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="screen">
+        <div class="screen-content">
+            <h1 class="game-title">POINTLESS</h1>
+            <p class="subtitle">Waiting to start...</p>
+
+            <div class="game-info">
+                <div class="info-row">
+                    <span class="label">Game Code:</span>
+                    <span id="lobby-game-code" class="value">----</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Your Name:</span>
+                    <span id="lobby-player-name" class="value">Player</span>
+                </div>
+            </div>
+
+            <div class="players-list">
+                <h3>Players</h3>
+                <div id="lobby-players"></div>
+            </div>
+
+            <div class="waiting-indicator">
+                <div class="spinner"></div>
+                <span>Waiting for host to start the game...</span>
+            </div>
+
+            <button id="leave-btn" class="btn btn-secondary">Leave Game</button>
+        </div>
+    </div>
+
+    <!-- Game Screen - Waiting for turn -->
+    <div id="waiting-screen" class="screen">
+        <div class="screen-content">
+            <div class="round-info">
+                Round <span id="wait-current-round">1</span> of <span id="wait-total-rounds">5</span>
+            </div>
+
+            <div class="category-card">
+                <div class="category-label">Category</div>
+                <div id="wait-category" class="category-text">Loading...</div>
+                <div id="wait-category-pl" class="category-text-pl hidden"></div>
+            </div>
+
+            <div class="current-turn-card">
+                <div class="turn-label">Current Turn</div>
+                <div id="wait-current-player" class="current-player-name">Player</div>
+            </div>
+
+            <div class="my-score-display">
+                <div class="score-label">Your Score</div>
+                <div id="wait-my-score" class="score-value">0</div>
+            </div>
+
+            <div id="standings-preview" class="standings-preview">
+                <!-- Mini standings -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Turn Screen -->
+    <div id="your-turn-screen" class="screen">
+        <div class="screen-content">
+            <div class="your-turn-banner">
+                YOUR TURN!
+            </div>
+
+            <div id="turn-timer" class="turn-timer hidden">
+                <div id="timer-circle" class="timer-circle">
+                    <span id="timer-seconds">30</span>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-label">Category</div>
+                <div id="turn-category" class="category-text">Loading...</div>
+                <div id="turn-category-pl" class="category-text-pl hidden"></div>
+            </div>
+
+            <div class="answer-input-area">
+                <input
+                    type="text"
+                    id="answer-input"
+                    placeholder="Type your answer..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    enterkeyhint="send"
+                >
+            </div>
+
+            <div class="answer-buttons">
+                <button id="submit-answer-btn" class="btn btn-primary btn-large">SUBMIT</button>
+                <button id="pass-btn" class="btn btn-secondary">PASS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Reveal Screen -->
+    <div id="reveal-screen" class="screen">
+        <div class="screen-content">
+            <div class="reveal-card">
+                <div class="reveal-label">Your Answer</div>
+                <div id="reveal-answer" class="reveal-answer">Answer</div>
+                <div class="reveal-score-container">
+                    <div id="reveal-score" class="reveal-score">100</div>
+                </div>
+                <div id="reveal-message" class="reveal-message"></div>
+            </div>
+
+            <div class="watch-tv-message">
+                Watch the main screen for the reveal!
+            </div>
+        </div>
+    </div>
+
+    <!-- Round End Screen -->
+    <div id="round-end-screen" class="screen">
+        <div class="screen-content">
+            <h2 class="round-end-title">Round <span id="end-round-num">1</span> Complete</h2>
+
+            <div id="round-standings" class="standings-list">
+                <!-- Standings populated dynamically -->
+            </div>
+
+            <div id="eliminated-message" class="eliminated-message hidden">
+                <span id="eliminated-name">Player</span> has been eliminated!
+            </div>
+
+            <div class="waiting-indicator">
+                <div class="spinner"></div>
+                <span>Waiting for next round...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <div class="screen-content">
+            <h1 class="game-over-title">GAME OVER</h1>
+
+            <div id="winner-card" class="winner-card">
+                <div class="winner-label">Winner</div>
+                <div id="winner-name" class="winner-name">Player</div>
+                <div id="winner-score" class="winner-score">Score: 0</div>
+            </div>
+
+            <div id="did-i-win" class="did-i-win hidden">
+                Congratulations! You won!
+            </div>
+
+            <div id="final-standings" class="standings-list">
+                <!-- Final standings -->
+            </div>
+
+            <button id="play-again-btn" class="btn btn-primary btn-large">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button id="close-settings" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-row">
+                    <label for="language-select">Language / Jezyk</label>
+                    <select id="language-select">
+                        <option value="en">English</option>
+                        <option value="pl">Polski</option>
+                    </select>
+                </div>
+                <p class="setting-description">
+                    When Polish is selected, questions will be shown in Polish on your phone while the main screen stays in English.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { PlayerController } from './js/multiplayer/player-controller.js';
+        import { GamePhase } from './js/multiplayer/messages.js';
+
+        class PointlessPlayer {
+            constructor() {
+                this.controller = null;
+                this.language = localStorage.getItem('pointless-language') || 'en';
+
+                this.init();
+            }
+
+            init() {
+                // Set initial language in UI
+                document.getElementById('language-select').value = this.language;
+
+                // Load saved name
+                const savedName = localStorage.getItem('pointless-player-name');
+                if (savedName) {
+                    document.getElementById('player-name-input').value = savedName;
+                }
+
+                // Check for game code in URL
+                const params = new URLSearchParams(window.location.search);
+                const codeFromUrl = params.get('code');
+                if (codeFromUrl) {
+                    document.getElementById('game-code-input').value = codeFromUrl.toUpperCase();
+                }
+
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Join button
+                document.getElementById('join-btn').addEventListener('click', () => this.joinGame());
+
+                // Enter key on inputs
+                document.getElementById('game-code-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('player-name-input').focus();
+                    }
+                });
+                document.getElementById('player-name-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.joinGame();
+                    }
+                });
+
+                // Auto-uppercase game code
+                document.getElementById('game-code-input').addEventListener('input', (e) => {
+                    e.target.value = e.target.value.toUpperCase();
+                });
+
+                // Leave button
+                document.getElementById('leave-btn').addEventListener('click', () => this.leaveGame());
+
+                // Answer submission
+                document.getElementById('submit-answer-btn').addEventListener('click', () => this.submitAnswer());
+                document.getElementById('pass-btn').addEventListener('click', () => this.passAnswer());
+
+                // Enter key for answer
+                document.getElementById('answer-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.submitAnswer();
+                    }
+                });
+
+                // Typing indicator
+                let typingTimeout;
+                document.getElementById('answer-input').addEventListener('input', () => {
+                    if (this.controller) {
+                        this.controller.setTyping(true);
+                        clearTimeout(typingTimeout);
+                        typingTimeout = setTimeout(() => {
+                            if (this.controller) {
+                                this.controller.setTyping(false);
+                            }
+                        }, 1000);
+                    }
+                });
+
+                // Play again
+                document.getElementById('play-again-btn').addEventListener('click', () => {
+                    this.leaveGame();
+                    this.showScreen('join-screen');
+                });
+
+                // Settings
+                document.getElementById('settings-btn').addEventListener('click', () => {
+                    document.getElementById('settings-modal').classList.remove('hidden');
+                });
+                document.getElementById('close-settings').addEventListener('click', () => {
+                    document.getElementById('settings-modal').classList.add('hidden');
+                });
+
+                // Language change
+                document.getElementById('language-select').addEventListener('change', (e) => {
+                    this.language = e.target.value;
+                    localStorage.setItem('pointless-language', this.language);
+                    if (this.controller) {
+                        this.controller.setLanguage(this.language);
+                    }
+                    this.updateCategoryDisplay();
+                });
+            }
+
+            async joinGame() {
+                const code = document.getElementById('game-code-input').value.trim().toUpperCase();
+                const name = document.getElementById('player-name-input').value.trim();
+
+                if (!code || code.length !== 4) {
+                    this.showError('Please enter a 4-character game code');
+                    return;
+                }
+
+                if (!name) {
+                    this.showError('Please enter your name');
+                    return;
+                }
+
+                this.hideError();
+
+                this.controller = new PlayerController({
+                    onStateSync: (state, myId) => this.handleStateSync(state, myId),
+                    onPlayerJoined: (player) => this.handlePlayerJoined(player),
+                    onPlayerLeft: (playerId) => this.handlePlayerLeft(playerId),
+                    onTurnStart: (playerId, playerName, timerDuration, isMyTurn) =>
+                        this.handleTurnStart(playerId, playerName, timerDuration, isMyTurn),
+                    onScoreReveal: (data) => this.handleScoreReveal(data),
+                    onRoundEnd: (standings, eliminatedId) => this.handleRoundEnd(standings, eliminatedId),
+                    onGameEnd: (winner, standings, didIWin) => this.handleGameEnd(winner, standings, didIWin),
+                    onError: (message) => this.showError(message),
+                    onDisconnected: () => this.handleDisconnected(),
+                    onReconnecting: (attempt) => this.handleReconnecting(attempt),
+                    onReconnectFailed: () => this.handleReconnectFailed()
+                });
+
+                try {
+                    await this.controller.joinGame(code, name);
+                    this.showScreen('lobby-screen');
+                    document.getElementById('lobby-game-code').textContent = code;
+                    document.getElementById('lobby-player-name').textContent = name;
+                } catch (error) {
+                    console.error('Failed to join game:', error);
+                    this.showError('Could not connect to game. Check the code and try again.');
+                    this.controller = null;
+                }
+            }
+
+            leaveGame() {
+                if (this.controller) {
+                    this.controller.disconnect();
+                    this.controller = null;
+                }
+                this.showScreen('join-screen');
+            }
+
+            handleStateSync(state, myId) {
+                // Update lobby players
+                this.updateLobbyPlayers(state.players);
+
+                // Update screen based on phase
+                switch (state.phase) {
+                    case 'lobby':
+                        this.showScreen('lobby-screen');
+                        break;
+                    case 'playing':
+                    case 'revealing':
+                        if (state.currentPlayerId === myId) {
+                            if (state.phase === 'revealing') {
+                                // Stay on reveal screen
+                            } else {
+                                this.showScreen('your-turn-screen');
+                            }
+                        } else {
+                            this.showScreen('waiting-screen');
+                        }
+                        break;
+                    case 'roundEnd':
+                        this.showScreen('round-end-screen');
+                        break;
+                    case 'gameOver':
+                        // Handled by onGameEnd
+                        break;
+                }
+
+                // Update round info
+                document.getElementById('wait-current-round').textContent = state.currentRound;
+                document.getElementById('wait-total-rounds').textContent = state.totalRounds;
+                document.getElementById('end-round-num').textContent = state.currentRound;
+
+                // Update category display
+                this.currentCategory = state.currentCategory;
+                this.updateCategoryDisplay();
+
+                // Update my score
+                const myPlayer = state.players.find(p => p.id === myId);
+                if (myPlayer) {
+                    document.getElementById('wait-my-score').textContent = myPlayer.score;
+                }
+
+                // Update mini standings
+                this.updateMiniStandings(state.players);
+            }
+
+            updateCategoryDisplay() {
+                if (!this.currentCategory) return;
+
+                const prompt = this.currentCategory.prompt;
+                let polishPrompt = null;
+
+                if (this.currentCategory.translations && this.currentCategory.translations.pl) {
+                    polishPrompt = this.currentCategory.translations.pl.prompt;
+                }
+
+                // Waiting screen
+                document.getElementById('wait-category').textContent = prompt;
+                const waitPl = document.getElementById('wait-category-pl');
+                if (this.language === 'pl' && polishPrompt) {
+                    waitPl.textContent = polishPrompt;
+                    waitPl.classList.remove('hidden');
+                } else {
+                    waitPl.classList.add('hidden');
+                }
+
+                // Turn screen
+                document.getElementById('turn-category').textContent = prompt;
+                const turnPl = document.getElementById('turn-category-pl');
+                if (this.language === 'pl' && polishPrompt) {
+                    turnPl.textContent = polishPrompt;
+                    turnPl.classList.remove('hidden');
+                } else {
+                    turnPl.classList.add('hidden');
+                }
+            }
+
+            handlePlayerJoined(player) {
+                // Will be updated via state sync
+            }
+
+            handlePlayerLeft(playerId) {
+                // Will be updated via state sync
+            }
+
+            handleTurnStart(playerId, playerName, timerDuration, isMyTurn) {
+                document.getElementById('wait-current-player').textContent = playerName;
+
+                if (isMyTurn) {
+                    this.showScreen('your-turn-screen');
+                    document.getElementById('answer-input').value = '';
+                    document.getElementById('answer-input').focus();
+
+                    // Haptic feedback
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(200);
+                    }
+
+                    // Timer
+                    if (timerDuration) {
+                        this.startTimer(timerDuration);
+                    } else {
+                        document.getElementById('turn-timer').classList.add('hidden');
+                    }
+                } else {
+                    this.showScreen('waiting-screen');
+                }
+            }
+
+            handleScoreReveal(data) {
+                if (data.isMyScore) {
+                    this.showScreen('reveal-screen');
+                    document.getElementById('reveal-answer').textContent = data.answer;
+                    document.getElementById('reveal-score').textContent = data.score;
+
+                    const message = document.getElementById('reveal-message');
+                    if (data.isPointless) {
+                        message.textContent = 'POINTLESS!';
+                        message.className = 'reveal-message pointless';
+                        if ('vibrate' in navigator) {
+                            navigator.vibrate([100, 50, 100, 50, 200]);
+                        }
+                    } else if (data.isCorrect) {
+                        message.textContent = data.score < 50 ? 'Low score!' : 'Good answer!';
+                        message.className = 'reveal-message correct';
+                    } else {
+                        message.textContent = 'Not on the board';
+                        message.className = 'reveal-message wrong';
+                    }
+                }
+            }
+
+            handleRoundEnd(standings, eliminatedId) {
+                this.showScreen('round-end-screen');
+
+                const list = document.getElementById('round-standings');
+                list.innerHTML = standings.map((p, i) => `
+                    <div class="standing-row ${p.id === this.controller?.playerId ? 'is-me' : ''} ${p.id === eliminatedId ? 'eliminated' : ''}">
+                        <span class="rank">${i + 1}</span>
+                        <span class="name">${p.name}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
+                        <span class="score">${p.score}</span>
+                    </div>
+                `).join('');
+
+                if (eliminatedId) {
+                    const eliminated = standings.find(p => p.id === eliminatedId);
+                    if (eliminated) {
+                        document.getElementById('eliminated-name').textContent = eliminated.name;
+                        document.getElementById('eliminated-message').classList.remove('hidden');
+                    }
+                } else {
+                    document.getElementById('eliminated-message').classList.add('hidden');
+                }
+            }
+
+            handleGameEnd(winner, standings, didIWin) {
+                this.showScreen('game-over-screen');
+
+                document.getElementById('winner-name').textContent = winner.name;
+                document.getElementById('winner-score').textContent = `Score: ${winner.score}`;
+
+                if (didIWin) {
+                    document.getElementById('did-i-win').classList.remove('hidden');
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate([100, 50, 100, 50, 100, 50, 300]);
+                    }
+                } else {
+                    document.getElementById('did-i-win').classList.add('hidden');
+                }
+
+                const list = document.getElementById('final-standings');
+                list.innerHTML = standings.map((p, i) => `
+                    <div class="standing-row ${p.id === this.controller?.playerId ? 'is-me' : ''} ${i === 0 ? 'winner' : ''}">
+                        <span class="rank">${i + 1}</span>
+                        <span class="name">${p.name}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
+                        <span class="score">${p.score}</span>
+                    </div>
+                `).join('');
+            }
+
+            handleDisconnected() {
+                this.showConnectionBanner('Disconnected', 'error');
+            }
+
+            handleReconnecting(attempt) {
+                this.showConnectionBanner(`Reconnecting... (attempt ${attempt})`, 'warning');
+            }
+
+            handleReconnectFailed() {
+                this.showConnectionBanner('Connection lost. Please rejoin.', 'error');
+                setTimeout(() => {
+                    this.leaveGame();
+                    this.showScreen('join-screen');
+                }, 3000);
+            }
+
+            showConnectionBanner(message, type) {
+                const banner = document.getElementById('connection-banner');
+                const messageEl = document.getElementById('connection-message');
+                banner.className = `connection-banner ${type}`;
+                messageEl.textContent = message;
+                banner.classList.remove('hidden');
+
+                if (type === 'success') {
+                    setTimeout(() => {
+                        banner.classList.add('hidden');
+                    }, 2000);
+                }
+            }
+
+            hideConnectionBanner() {
+                document.getElementById('connection-banner').classList.add('hidden');
+            }
+
+            updateLobbyPlayers(players) {
+                const container = document.getElementById('lobby-players');
+                container.innerHTML = players.map(p => `
+                    <div class="lobby-player ${p.connected ? 'connected' : 'disconnected'} ${p.id === this.controller?.playerId ? 'is-me' : ''}">
+                        <span class="player-name">${p.name}</span>
+                        ${p.id === this.controller?.playerId ? '<span class="you-badge">You</span>' : ''}
+                    </div>
+                `).join('');
+            }
+
+            updateMiniStandings(players) {
+                const container = document.getElementById('standings-preview');
+                const sorted = [...players].sort((a, b) => a.score - b.score);
+
+                container.innerHTML = sorted.slice(0, 4).map((p, i) => `
+                    <div class="mini-standing ${p.id === this.controller?.playerId ? 'is-me' : ''}">
+                        <span class="rank">${i + 1}.</span>
+                        <span class="name">${p.name}</span>
+                        <span class="score">${p.score}</span>
+                    </div>
+                `).join('');
+            }
+
+            submitAnswer() {
+                const input = document.getElementById('answer-input');
+                const answer = input.value.trim();
+
+                if (!answer) {
+                    this.passAnswer();
+                    return;
+                }
+
+                if (this.controller) {
+                    this.controller.submitAnswer(answer);
+                }
+            }
+
+            passAnswer() {
+                if (this.controller) {
+                    this.controller.pass();
+                }
+            }
+
+            startTimer(duration) {
+                const timerEl = document.getElementById('turn-timer');
+                const secondsEl = document.getElementById('timer-seconds');
+                const circleEl = document.getElementById('timer-circle');
+
+                timerEl.classList.remove('hidden');
+                let remaining = duration;
+
+                const tick = () => {
+                    secondsEl.textContent = remaining;
+
+                    if (remaining <= 10) {
+                        circleEl.classList.add('warning');
+                    }
+
+                    if (remaining > 0) {
+                        remaining--;
+                        this.timerTimeout = setTimeout(tick, 1000);
+                    } else {
+                        circleEl.classList.remove('warning');
+                    }
+                };
+
+                tick();
+            }
+
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+
+                // Clear timer if leaving turn screen
+                if (screenId !== 'your-turn-screen' && this.timerTimeout) {
+                    clearTimeout(this.timerTimeout);
+                }
+            }
+
+            showError(message) {
+                const errorEl = document.getElementById('join-error');
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+
+            hideError() {
+                document.getElementById('join-error').classList.add('hidden');
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new PointlessPlayer();
+        });
+    </script>
+</body>
+</html>

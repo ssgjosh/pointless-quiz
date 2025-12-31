@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command:*)",
+      "Bash(findstr:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run party:dev:*)",
+      "Bash(npm run serve:*)",
+      "Bash(npm run server:*)",
+      "Bash(npx partykit deploy)",
+      "Bash(npx ngrok http 3000)",
+      "Bash(npx vercel --yes)",
+      "Bash(npx vercel:*)",
+      "Bash(npx @railway/cli login --browserless)",
+      "Bash(flyctl version:*)",
+      "Bash(flyctl auth whoami:*)",
+      "Bash(taskkill:*)",
+      "Bash(node server.js:*)",
+      "Bash(npx ngrok:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(npx localtunnel --port 3000)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
