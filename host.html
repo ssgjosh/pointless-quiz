@@ -367,6 +367,14 @@
     <script type="module">
         import { HostController } from './js/multiplayer/host-controller.js';
 
+        // Sanitize user input to prevent XSS
+        function sanitize(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         class PointlessHost {
             constructor() {
                 this.controller = null;
@@ -390,19 +398,26 @@
                 if (storedPack) {
                     try {
                         this.pack = JSON.parse(storedPack);
-                        sessionStorage.removeItem('pointless-pack'); // Clean up
+                        // Don't remove - allow refresh to work
                     } catch (e) {
                         console.error('Failed to parse stored pack:', e);
                     }
                 }
 
-                // Fall back to finding pack by ID from embedded packs
+                // Fall back to finding pack by ID from embedded packs (EMBEDDED_PACKS is an object, not array)
                 if (!this.pack && packId && window.EMBEDDED_PACKS) {
-                    this.pack = window.EMBEDDED_PACKS.find(p => p.id === packId);
+                    const embeddedPack = window.EMBEDDED_PACKS[packId];
+                    if (embeddedPack) {
+                        this.pack = { id: packId, ...embeddedPack };
+                    }
                 }
 
-                if (!this.pack && window.EMBEDDED_PACKS && window.EMBEDDED_PACKS.length > 0) {
-                    this.pack = window.EMBEDDED_PACKS[0];
+                // Fall back to first available pack
+                if (!this.pack && window.EMBEDDED_PACKS) {
+                    const firstKey = Object.keys(window.EMBEDDED_PACKS)[0];
+                    if (firstKey) {
+                        this.pack = { id: firstKey, ...window.EMBEDDED_PACKS[firstKey] };
+                    }
                 }
 
                 this.settings = {
@@ -412,13 +427,26 @@
                     gameMode: gameMode
                 };
 
-                // Update pack info display
+                // Update pack info display (use 'name' or 'title')
                 if (this.pack) {
-                    document.getElementById('pack-title').textContent = this.pack.title;
+                    document.getElementById('pack-title').textContent = this.pack.title || this.pack.name || 'Quiz Pack';
                 }
 
-                // Set join URL
-                const joinUrl = window.location.origin + '/player.html';
+                // Set join URL - use production URL if on Vercel, otherwise show instructions
+                let joinUrl;
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+                    // Local development - show the network IP
+                    joinUrl = window.location.origin.replace('localhost', window.location.hostname) + '/player.html';
+                    // Add a note about LAN access
+                    const joinUrlEl = document.getElementById('join-url');
+                    if (joinUrlEl && hostname === 'localhost') {
+                        joinUrl = '(Use your computer\'s IP address)/player.html';
+                    }
+                } else {
+                    // Production - use origin
+                    joinUrl = window.location.origin + '/player.html';
+                }
                 document.getElementById('join-url').textContent = joinUrl;
                 document.getElementById('game-join-url').textContent = joinUrl;
 
@@ -612,7 +640,7 @@
                 standingsEl.innerHTML = standings.map((p, i) => `
                     <div class="standing-row ${p.id === eliminatedId ? 'eliminated' : ''}">
                         <span class="rank">${i + 1}</span>
-                        <span class="name">${p.name}</span>
+                        <span class="name">${sanitize(p.name)}</span>
                         <span class="score">${p.score}</span>
                     </div>
                 `).join('');
@@ -630,14 +658,14 @@
                 this.showScreen('results-screen');
 
                 document.getElementById('winner-announcement').innerHTML = `
-                    <div class="winner-name">${winner.name}</div>
+                    <div class="winner-name">${sanitize(winner.name)}</div>
                     <div class="winner-score">Score: ${winner.score}</div>
                 `;
 
                 document.getElementById('final-standings').innerHTML = standings.map((p, i) => `
                     <div class="standing-row ${i === 0 ? 'winner' : ''}">
                         <span class="rank">${i + 1}</span>
-                        <span class="name">${p.name}</span>
+                        <span class="name">${sanitize(p.name)}</span>
                         <span class="score">${p.score}</span>
                     </div>
                 `).join('');
@@ -682,7 +710,7 @@
 
                 container.innerHTML = players.map(p => `
                     <div class="player-card ${p.connected ? 'connected' : 'disconnected'}">
-                        <div class="player-name">${p.name}</div>
+                        <div class="player-name">${sanitize(p.name)}</div>
                         <div class="player-status">${p.connected ? 'Ready' : 'Disconnected'}</div>
                     </div>
                 `).join('');
@@ -691,8 +719,8 @@
                 const statusContainer = document.getElementById('player-statuses');
                 if (statusContainer) {
                     statusContainer.innerHTML = players.map(p => `
-                        <div class="player-status-chip" data-player-id="${p.id}">
-                            ${p.name}: ${p.score}
+                        <div class="player-status-chip" data-player-id="${sanitize(p.id)}">
+                            ${sanitize(p.name)}: ${p.score}
                         </div>
                     `).join('');
                 }
@@ -707,7 +735,7 @@
 
                 container.innerHTML = players.map(p => `
                     <div class="podium ${p.eliminated ? 'eliminated' : ''}">
-                        <div class="podium-name">${p.name}</div>
+                        <div class="podium-name">${sanitize(p.name)}</div>
                         <div class="podium-score">${p.score}</div>
                     </div>
                 `).join('');
@@ -759,8 +787,8 @@
 
                 container.innerHTML = entries.map(e => `
                     <div class="board-entry ${e.isCorrect ? 'correct' : 'wrong'}">
-                        <span class="entry-player">${e.playerName}</span>
-                        <span class="entry-answer">${e.answer}</span>
+                        <span class="entry-player">${sanitize(e.playerName)}</span>
+                        <span class="entry-answer">${sanitize(e.answer)}</span>
                         <span class="entry-score">${e.score}</span>
                     </div>
                 `).join('');
@@ -773,8 +801,8 @@
                 const entry = document.createElement('div');
                 entry.className = `board-entry ${isCorrect ? 'correct' : 'wrong'}`;
                 entry.innerHTML = `
-                    <span class="entry-player">${playerName}</span>
-                    <span class="entry-answer">${answer}</span>
+                    <span class="entry-player">${sanitize(playerName)}</span>
+                    <span class="entry-answer">${sanitize(answer)}</span>
                     <span class="entry-score">${score}</span>
                 `;
                 container.appendChild(entry);

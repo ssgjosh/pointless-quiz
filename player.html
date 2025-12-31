@@ -243,6 +243,14 @@
         import { PlayerController } from './js/multiplayer/player-controller.js';
         import { GamePhase } from './js/multiplayer/messages.js';
 
+        // Sanitize user input to prevent XSS
+        function sanitize(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         class PointlessPlayer {
             constructor() {
                 this.controller = null;
@@ -537,7 +545,7 @@
                 list.innerHTML = standings.map((p, i) => `
                     <div class="standing-row ${p.id === this.controller?.playerId ? 'is-me' : ''} ${p.id === eliminatedId ? 'eliminated' : ''}">
                         <span class="rank">${i + 1}</span>
-                        <span class="name">${p.name}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
+                        <span class="name">${sanitize(p.name)}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
                         <span class="score">${p.score}</span>
                     </div>
                 `).join('');
@@ -572,7 +580,7 @@
                 list.innerHTML = standings.map((p, i) => `
                     <div class="standing-row ${p.id === this.controller?.playerId ? 'is-me' : ''} ${i === 0 ? 'winner' : ''}">
                         <span class="rank">${i + 1}</span>
-                        <span class="name">${p.name}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
+                        <span class="name">${sanitize(p.name)}${p.id === this.controller?.playerId ? ' (You)' : ''}</span>
                         <span class="score">${p.score}</span>
                     </div>
                 `).join('');
@@ -616,7 +624,7 @@
                 const container = document.getElementById('lobby-players');
                 container.innerHTML = players.map(p => `
                     <div class="lobby-player ${p.connected ? 'connected' : 'disconnected'} ${p.id === this.controller?.playerId ? 'is-me' : ''}">
-                        <span class="player-name">${p.name}</span>
+                        <span class="player-name">${sanitize(p.name)}</span>
                         ${p.id === this.controller?.playerId ? '<span class="you-badge">You</span>' : ''}
                     </div>
                 `).join('');
@@ -629,7 +637,7 @@
                 container.innerHTML = sorted.slice(0, 4).map((p, i) => `
                     <div class="mini-standing ${p.id === this.controller?.playerId ? 'is-me' : ''}">
                         <span class="rank">${i + 1}.</span>
-                        <span class="name">${p.name}</span>
+                        <span class="name">${sanitize(p.name)}</span>
                         <span class="score">${p.score}</span>
                     </div>
                 `).join('');

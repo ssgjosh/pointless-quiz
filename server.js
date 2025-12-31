@@ -10,6 +10,10 @@ const PORT = process.env.PORT || 3000;
 // Store active game rooms
 const rooms = new Map();
 
+// Store player reconnection tokens (playerId -> { roomCode, name, expires })
+const reconnectTokens = new Map();
+const RECONNECT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes to reconnect
+
 // Generate a 4-character room code
 function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -78,7 +82,7 @@ function getClientState(state) {
         players: Array.from(state.players.values()).map(p => toClientPlayer(p)),
         playerOrder: state.playerOrder,
         settings: state.settings,
-        packTitle: state.pack?.title || null,
+        packTitle: state.pack?.title || state.pack?.name || null,
         currentRound: state.currentRound,
         totalRounds: state.settings.totalRounds,
         currentPlayerIndex: state.currentPlayerIndex,
@@ -100,6 +104,13 @@ function getCurrentPlayerId(state) {
         return null;
     }
     return state.playerOrder[state.currentPlayerIndex];
+}
+
+// Send error to a single client
+function sendError(ws, message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ERROR', message }));
+    }
 }
 
 // Broadcast to all clients in a room
@@ -153,6 +164,13 @@ function startGame(room) {
         return;
     }
 
+    // Clamp totalRounds to available categories
+    const availableCategories = state.pack.categories.length;
+    if (state.settings.totalRounds > availableCategories) {
+        state.settings.totalRounds = availableCategories;
+        console.log(`Clamped rounds to ${availableCategories} (available categories)`);
+    }
+
     // Select random categories for rounds
     const shuffled = [...state.pack.categories].sort(() => Math.random() - 0.5);
     state.roundCategories = shuffled.slice(0, state.settings.totalRounds);
@@ -191,17 +209,27 @@ function startRound(room) {
     startPlayerTurn(room);
 }
 
+// Clear any existing turn timer
+function clearTurnTimer(room) {
+    if (room.turnTimer) {
+        clearTimeout(room.turnTimer);
+        room.turnTimer = null;
+    }
+}
+
 // Start a player's turn
 function startPlayerTurn(room) {
     const state = room.state;
+    clearTurnTimer(room);
+
     const currentPlayerId = getCurrentPlayerId(state);
     if (!currentPlayerId) return;
 
     const player = state.players.get(currentPlayerId);
     if (!player) return;
 
-    // Skip eliminated players
-    if (player.eliminated) {
+    // Skip eliminated or disconnected players
+    if (player.eliminated || !player.connected) {
         state.currentPlayerIndex++;
         if (state.currentPlayerIndex < state.playerOrder.length) {
             startPlayerTurn(room);
@@ -214,19 +242,34 @@ function startPlayerTurn(room) {
     player.typing = false;
     player.submittedAnswer = null;
 
+    const timerDuration = state.settings.timerEnabled ? state.settings.timerDuration : null;
+
     broadcast(room, {
         type: 'TURN_START',
         playerId: currentPlayerId,
         playerName: player.name,
-        timerDuration: state.settings.timerEnabled ? state.settings.timerDuration : null
+        timerDuration
     });
 
     broadcastState(room);
+
+    // Server-side timer: auto-pass if timer expires
+    if (timerDuration) {
+        room.turnTimer = setTimeout(() => {
+            // Double-check player is still current and hasn't submitted
+            if (getCurrentPlayerId(state) === currentPlayerId && !player.submittedAnswer) {
+                console.log(`Timer expired for ${player.name}, auto-passing`);
+                handleAnswerSubmission(room, currentPlayerId, null);
+            }
+        }, (timerDuration + 2) * 1000); // +2 seconds grace period
+    }
 }
 
 // Handle answer submission
 function handleAnswerSubmission(room, playerId, answer) {
     const state = room.state;
+    clearTurnTimer(room);
+
     const currentPlayerId = getCurrentPlayerId(state);
     if (playerId !== currentPlayerId) {
         return;
@@ -401,60 +444,108 @@ wss.on('connection', (ws, req) => {
     const pathParts = url.pathname.split('/').filter(Boolean);
 
     // Expected path: /party/ROOMCODE
-    let roomCode = pathParts[1] || generateRoomCode();
+    let roomCode = pathParts[1] || '';
     roomCode = roomCode.toUpperCase();
 
     const role = url.searchParams.get('role');
     const name = url.searchParams.get('name') || 'Player';
     const language = url.searchParams.get('language') || 'en';
+    const reconnectId = url.searchParams.get('reconnectId');
 
-    console.log(`New connection: ${role} "${name}" joining room ${roomCode}`);
+    console.log(`New connection: ${role} "${name}" joining room ${roomCode}${reconnectId ? ' (reconnect)' : ''}`);
 
-    // Get or create room
+    // Get or create room based on role
     let room = rooms.get(roomCode);
-    if (!room) {
-        room = {
-            state: createInitialState(roomCode),
-            clients: new Set()
-        };
-        rooms.set(roomCode, room);
-        console.log(`Created new room: ${roomCode}`);
-    }
 
-    // Add client to room
-    room.clients.add(ws);
-    ws.roomCode = roomCode;
-
+    // Only hosts can create rooms
     if (role === 'host') {
+        // Generate code if not provided
+        if (!roomCode) {
+            roomCode = generateRoomCode();
+        }
+
+        // Create room if it doesn't exist
+        if (!room) {
+            room = {
+                state: createInitialState(roomCode),
+                clients: new Set(),
+                turnTimer: null
+            };
+            rooms.set(roomCode, room);
+            console.log(`Created new room: ${roomCode}`);
+        }
+
+        // Add client to room
+        room.clients.add(ws);
+        ws.roomCode = roomCode;
         room.state.hostId = ws.playerId = 'host-' + Date.now();
+
         ws.send(JSON.stringify({
             type: 'GAME_CREATED',
             code: roomCode
         }));
     } else {
-        // Player joining
-        const playerId = 'player-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        // Player joining - room must exist
+        if (!room) {
+            console.log(`Room not found: ${roomCode}`);
+            sendError(ws, `Room "${roomCode}" not found. Check the code and try again.`);
+            ws.close(4004, 'Room not found');
+            return;
+        }
+
+        // Add client to room
+        room.clients.add(ws);
+        ws.roomCode = roomCode;
+
+        // Check for reconnection
+        let playerId = null;
+        let isReconnect = false;
+
+        if (reconnectId) {
+            const token = reconnectTokens.get(reconnectId);
+            if (token && token.roomCode === roomCode && token.expires > Date.now()) {
+                // Valid reconnection token
+                const existingPlayer = room.state.players.get(reconnectId);
+                if (existingPlayer) {
+                    playerId = reconnectId;
+                    existingPlayer.connected = true;
+                    existingPlayer.name = name || existingPlayer.name;
+                    existingPlayer.language = language;
+                    isReconnect = true;
+                    reconnectTokens.delete(reconnectId);
+                    console.log(`Player ${name} reconnected as ${playerId}`);
+                }
+            }
+        }
+
+        if (!playerId) {
+            // New player
+            playerId = 'player-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            const player = {
+                id: playerId,
+                name: name,
+                score: 0,
+                roundScores: [],
+                eliminated: false,
+                eliminatedRound: null,
+                connected: true,
+                language: language,
+                typing: false,
+                submittedAnswer: null
+            };
+            room.state.players.set(playerId, player);
+            room.state.playerOrder.push(playerId);
+        }
+
         ws.playerId = playerId;
 
-        const player = {
-            id: playerId,
-            name: name,
-            score: 0,
-            roundScores: [],
-            eliminated: false,
-            eliminatedRound: null,
-            connected: true,
-            language: language,
-            typing: false,
-            submittedAnswer: null
-        };
-        room.state.players.set(playerId, player);
-        room.state.playerOrder.push(playerId);
-
         // Notify all clients
+        const player = room.state.players.get(playerId);
         broadcast(room, {
             type: 'PLAYER_JOINED',
-            player: toClientPlayer(player)
+            player: toClientPlayer(player),
+            isReconnect
         });
     }
 
@@ -560,12 +651,28 @@ wss.on('connection', (ws, req) => {
             const player = room.state.players.get(ws.playerId);
             if (player) {
                 player.connected = false;
+
+                // Store reconnection token so player can rejoin
+                reconnectTokens.set(ws.playerId, {
+                    roomCode: ws.roomCode,
+                    name: player.name,
+                    expires: Date.now() + RECONNECT_WINDOW_MS
+                });
+
                 broadcast(room, { type: 'PLAYER_LEFT', playerId: ws.playerId });
                 broadcastState(room);
+
+                // If this player was the current player and game is in progress, auto-pass
+                const state = room.state;
+                if (state.phase === 'playing' && getCurrentPlayerId(state) === ws.playerId) {
+                    console.log(`Current player ${player.name} disconnected, auto-passing`);
+                    handleAnswerSubmission(room, ws.playerId, null);
+                }
             }
 
             // Clean up empty rooms after a delay
             if (room.clients.size === 0) {
+                clearTurnTimer(room);
                 setTimeout(() => {
                     if (room.clients.size === 0) {
                         rooms.delete(ws.roomCode);
