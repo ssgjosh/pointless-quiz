@@ -26,8 +26,8 @@ export class PointlessClient {
       return `${hostname}:3000`;
     }
 
-    // Production: use localtunnel URL (temporary) or deployed server
-    return 'moody-bars-boil.loca.lt';
+    // Production: use Render.com deployed server
+    return 'pointless-server.onrender.com';
   }
 
   generateRoomCode() {
